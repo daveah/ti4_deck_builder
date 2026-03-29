@@ -1,0 +1,1839 @@
+[
+  {
+    "tile_id": "19",
+    "name": "Wellon",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Wellon",
+        "resources": 1,
+        "influence": 2,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "cybernetic"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "20",
+    "name": "Vefut II",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Vefut II",
+        "resources": 2,
+        "influence": 2,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "21",
+    "name": "Thibah",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Thibah",
+        "resources": 1,
+        "influence": 1,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "propulsion"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "22",
+    "name": "Tar'Mann",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Tar'Mann",
+        "resources": 1,
+        "influence": 1,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "biotic"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "23",
+    "name": "Saudor",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Saudor",
+        "resources": 2,
+        "influence": 2,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "24",
+    "name": "Mehar Xull",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Mehar Xull",
+        "resources": 1,
+        "influence": 3,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [
+          "warfare"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "25",
+    "name": "Quann",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [
+      "beta"
+    ],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Quann",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "26",
+    "name": "Lodor",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [
+      "alpha"
+    ],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Lodor",
+        "resources": 3,
+        "influence": 1,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "27",
+    "name": "New Albion / Starpoint",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "New Albion",
+        "resources": 1,
+        "influence": 1,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "biotic"
+        ],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Starpoint",
+        "resources": 3,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "28",
+    "name": "Tequ'ran / Torkan",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Tequ'ran",
+        "resources": 2,
+        "influence": 0,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Torkan",
+        "resources": 0,
+        "influence": 3,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "29",
+    "name": "Qucen'n / Rarron",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Qucen'n",
+        "resources": 1,
+        "influence": 2,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Rarron",
+        "resources": 0,
+        "influence": 3,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "30",
+    "name": "Mellon / Zohbat",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Mellon",
+        "resources": 0,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Zohbat",
+        "resources": 3,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "31",
+    "name": "Lazar / Sakulag",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Lazar",
+        "resources": 1,
+        "influence": 0,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "cybernetic"
+        ],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Sakulag",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "32",
+    "name": "Dal Bootha / Xxehan",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Dal Bootha",
+        "resources": 0,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Xxehan",
+        "resources": 1,
+        "influence": 1,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "33",
+    "name": "Coorneeq / Resculon",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Coorneeq",
+        "resources": 1,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Resculon",
+        "resources": 2,
+        "influence": 0,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "34",
+    "name": "Centauri / Gral",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Centauri",
+        "resources": 1,
+        "influence": 3,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Gral",
+        "resources": 1,
+        "influence": 1,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "propulsion"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "35",
+    "name": "Bereg / Lirta IV",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Bereg",
+        "resources": 3,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Lirta IV",
+        "resources": 2,
+        "influence": 3,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "36",
+    "name": "Arnor / Lor",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Arnor",
+        "resources": 1,
+        "influence": 2,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Lor",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "37",
+    "name": "Arinam / Meer",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Arinam",
+        "resources": 1,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Meer",
+        "resources": 0,
+        "influence": 4,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [
+          "warfare"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "38",
+    "name": "Abyz / Fria",
+    "expansion": "base",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Abyz",
+        "resources": 3,
+        "influence": 0,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Fria",
+        "resources": 2,
+        "influence": 0,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "39",
+    "name": "Alpha Wormhole",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [
+      "alpha"
+    ],
+    "anomalies": [],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "40",
+    "name": "Beta Wormhole",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [
+      "beta"
+    ],
+    "anomalies": [],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "41",
+    "name": "Gravity Rift",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "gravity_rift"
+    ],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "42",
+    "name": "Nebula",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "nebula"
+    ],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "43",
+    "name": "Supernova",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "supernova"
+    ],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "44",
+    "name": "Asteroid Field",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "asteroid_field"
+    ],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "45",
+    "name": "Asteroid Field",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "asteroid_field"
+    ],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "46",
+    "name": "Empty Space",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "47",
+    "name": "Empty Space",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "48",
+    "name": "Empty Space",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "49",
+    "name": "Empty Space",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "50",
+    "name": "Empty Space",
+    "expansion": "base",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "59",
+    "name": "Archon Vail",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Archon Vail",
+        "resources": 1,
+        "influence": 3,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [
+          "propulsion"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "60",
+    "name": "Perimeter",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Perimeter",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "61",
+    "name": "Ang",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Ang",
+        "resources": 2,
+        "influence": 0,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "warfare"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "62",
+    "name": "Sem-Lore",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Sem-Lore",
+        "resources": 3,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [
+          "cybernetic"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "63",
+    "name": "Vorhal",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Vorhal",
+        "resources": 0,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [
+          "biotic"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "64",
+    "name": "Atlas",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [
+      "beta"
+    ],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Atlas",
+        "resources": 3,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "65",
+    "name": "Primor",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Primor",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": true,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "66",
+    "name": "Hope's End",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Hope's End",
+        "resources": 3,
+        "influence": 0,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": true,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "67",
+    "name": "Cormund",
+    "expansion": "pok",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "gravity_rift"
+    ],
+    "special": false,
+    "planets": [
+      {
+        "name": "Cormund",
+        "resources": 2,
+        "influence": 0,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "68",
+    "name": "Everra",
+    "expansion": "pok",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "nebula"
+    ],
+    "special": false,
+    "planets": [
+      {
+        "name": "Everra",
+        "resources": 3,
+        "influence": 1,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "69",
+    "name": "Accoen / Jeol Ir",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Accoen",
+        "resources": 2,
+        "influence": 3,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Jeol Ir",
+        "resources": 2,
+        "influence": 3,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "70",
+    "name": "Kraag / Siig",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Kraag",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Siig",
+        "resources": 0,
+        "influence": 2,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "71",
+    "name": "Bakal / Alio Prima",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Bakal",
+        "resources": 3,
+        "influence": 2,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Alio Prima",
+        "resources": 1,
+        "influence": 1,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "72",
+    "name": "Lisis / Velnor",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Lisis",
+        "resources": 2,
+        "influence": 2,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Velnor",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "warfare"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "73",
+    "name": "Cealdri / Xanhact",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Cealdri",
+        "resources": 0,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [
+          "cybernetic"
+        ],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Xanhact",
+        "resources": 0,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "74",
+    "name": "Vega Major / Vega Minor",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Vega Major",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Vega Minor",
+        "resources": 1,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [
+          "propulsion"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "75",
+    "name": "Abaddon / Loki / Ashtroth",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Abaddon",
+        "resources": 1,
+        "influence": 0,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Loki",
+        "resources": 1,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Ashtroth",
+        "resources": 2,
+        "influence": 0,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "76",
+    "name": "Rigel I / Rigel II / Rigel III",
+    "expansion": "pok",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Rigel I",
+        "resources": 0,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Rigel II",
+        "resources": 1,
+        "influence": 2,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Rigel III",
+        "resources": 1,
+        "influence": 1,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "biotic"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "77",
+    "name": "Empty Space",
+    "expansion": "pok",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "78",
+    "name": "Empty Space",
+    "expansion": "pok",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "79",
+    "name": "Asteroid Field / Alpha Wormhole",
+    "expansion": "pok",
+    "board_color": "red",
+    "wormholes": [
+      "alpha"
+    ],
+    "anomalies": [
+      "asteroid_field"
+    ],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "80",
+    "name": "Supernova",
+    "expansion": "pok",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "supernova"
+    ],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "97",
+    "name": "Faunus",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Faunus",
+        "resources": 1,
+        "influence": 3,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "biotic"
+        ],
+        "legendary": true,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "98",
+    "name": "Garbozia",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Garbozia",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": true,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "99",
+    "name": "Emelpar",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Emelpar",
+        "resources": 0,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": true,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "100",
+    "name": "Tempesta",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Tempesta",
+        "resources": 1,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [
+          "propulsion"
+        ],
+        "legendary": true,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "101",
+    "name": "Olergodt",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Olergodt",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "cultural",
+          "hazardous"
+        ],
+        "techs": [
+          "cybernetic",
+          "warfare"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "102",
+    "name": "Andeara",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [
+      "alpha"
+    ],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Andeara",
+        "resources": 1,
+        "influence": 1,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "propulsion"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "103",
+    "name": "Vira-Pics III",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Vira-Pics III",
+        "resources": 2,
+        "influence": 3,
+        "traits": [
+          "cultural",
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "104",
+    "name": "Lesab",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Lesab",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "industrial",
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "105",
+    "name": "New Terra / Tinnes",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "New Terra",
+        "resources": 1,
+        "influence": 1,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "biotic"
+        ],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Tinnes",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "industrial",
+          "hazardous"
+        ],
+        "techs": [
+          "biotic"
+        ],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "106",
+    "name": "Cresius / Lazul Rex",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Cresius",
+        "resources": 0,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Lazul Rex",
+        "resources": 2,
+        "influence": 2,
+        "traits": [
+          "cultural",
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "107",
+    "name": "Tiamat / Hercalor",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Tiamat",
+        "resources": 2,
+        "influence": 1,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [
+          "cybernetic",
+          "cybernetic"
+        ],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Hercalor",
+        "resources": 1,
+        "influence": 0,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "108",
+    "name": "Kostboth / Capha",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Kostboth",
+        "resources": 0,
+        "influence": 1,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Capha",
+        "resources": 3,
+        "influence": 0,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "109",
+    "name": "Bellatrix / Tsion Station",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Bellatrix",
+        "resources": 1,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Tsion Station",
+        "resources": 1,
+        "influence": 1,
+        "traits": [],
+        "techs": [],
+        "legendary": false,
+        "station": true
+      }
+    ]
+  },
+  {
+    "tile_id": "110",
+    "name": "Horizon / El'Nath / Luthien VI",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Horizon",
+        "resources": 1,
+        "influence": 2,
+        "traits": [
+          "cultural"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "El'Nath",
+        "resources": 2,
+        "influence": 0,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Luthien VI",
+        "resources": 3,
+        "influence": 1,
+        "traits": [
+          "hazardous"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "111",
+    "name": "Tarana / Oluz Station",
+    "expansion": "thunders_edge",
+    "board_color": "blue",
+    "wormholes": [],
+    "anomalies": [],
+    "special": false,
+    "planets": [
+      {
+        "name": "Tarana",
+        "resources": 1,
+        "influence": 2,
+        "traits": [
+          "cultural",
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      },
+      {
+        "name": "Oluz Station",
+        "resources": 1,
+        "influence": 1,
+        "traits": [],
+        "techs": [],
+        "legendary": false,
+        "station": true
+      }
+    ]
+  },
+  {
+    "tile_id": "113",
+    "name": "Gravity Rift / Beta Wormhole",
+    "expansion": "thunders_edge",
+    "board_color": "red",
+    "wormholes": [
+      "beta"
+    ],
+    "anomalies": [
+      "gravity_rift"
+    ],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "114",
+    "name": "Entropic Scar",
+    "expansion": "thunders_edge",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "entropic_scar"
+    ],
+    "special": false,
+    "planets": []
+  },
+  {
+    "tile_id": "115",
+    "name": "Industrex / Asteroid Field",
+    "expansion": "thunders_edge",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "asteroid_field"
+    ],
+    "special": false,
+    "planets": [
+      {
+        "name": "Industrex",
+        "resources": 2,
+        "influence": 0,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [
+          "warfare"
+        ],
+        "legendary": true,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "116",
+    "name": "Lemox / Entropic Scar",
+    "expansion": "thunders_edge",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "entropic_scar"
+    ],
+    "special": false,
+    "planets": [
+      {
+        "name": "Lemox",
+        "resources": 0,
+        "influence": 3,
+        "traits": [
+          "industrial"
+        ],
+        "techs": [],
+        "legendary": false,
+        "station": false
+      }
+    ]
+  },
+  {
+    "tile_id": "117",
+    "name": "The Watchtower / Gravity Rift / Asteroid Field",
+    "expansion": "thunders_edge",
+    "board_color": "red",
+    "wormholes": [],
+    "anomalies": [
+      "gravity_rift",
+      "asteroid_field"
+    ],
+    "special": false,
+    "planets": [
+      {
+        "name": "The Watchtower",
+        "resources": 1,
+        "influence": 1,
+        "traits": [],
+        "techs": [],
+        "legendary": false,
+        "station": true
+      }
+    ]
+  }
+]
