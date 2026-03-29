@@ -161,8 +161,13 @@ function renderBoardPreview(mode: Mode, players: number, setup: string): string 
         <p class="eyebrow">Board Layout Preview</p>
         <h3>${layout.title}</h3>
         <p>${describeSetupVariant(mode, players, setup)}</p>
-        ${layout.notes ? `<p>${layout.notes}</p>` : ""}
         <div class="preview-tags">${captions.map((caption) => `<span>${caption}</span>`).join("")}</div>
+        <div class="preview-legend">
+          <span><i class="legend-swatch green"></i>Green: home system</span>
+          <span><i class="legend-swatch red"></i>Red: Mecatol Rex</span>
+          <span><i class="legend-swatch blue"></i>Blue: normal system</span>
+          <span><i class="legend-swatch hyperlane"></i>Black: hyperlane tile</span>
+        </div>
       </div>
       <svg class="board-preview" viewBox="0 0 ${width} ${height}" role="img" aria-label="Board layout preview for ${players} player ${setup} configuration">
         <rect x="0" y="0" width="${width}" height="${height}" rx="24" fill="rgba(255,255,255,0.03)" />
@@ -186,16 +191,6 @@ function renderBoardPreview(mode: Mode, players: number, setup: string): string 
           })
           .join("")}
       </svg>
-      <div class="preview-legend">
-        <span><i class="legend-swatch red"></i>Red: Mecatol Rex / special center</span>
-        <span><i class="legend-swatch blue1"></i><i class="legend-swatch blue2"></i><i class="legend-swatch blue3"></i><i class="legend-swatch blue4"></i>Blue ring shades: use <code>blue1</code> through <code>blue4</code> for outer-to-inner or any ring scheme you want.</span>
-        <span><i class="legend-swatch blue"></i><code>blue</code> still works as the default mid-blue system slot.</span>
-        <span><i class="legend-swatch green"></i>Green: home system slot</span>
-        <span><i class="legend-swatch hyperlane"></i>Hyperlane: variant + optional rotation/connections</span>
-        <span>Coordinates come from <code>src/layouts.json</code>.</span>
-        <span>Axial neighbors: <code>(q,r-1)</code>, <code>(q+1,r-1)</code>, <code>(q+1,r)</code>, <code>(q,r+1)</code>, <code>(q-1,r+1)</code>, <code>(q-1,r)</code>.</span>
-        <span>Hyperlane edge numbers run clockwise as <code>0,1,2,3,4,5</code>, starting at the upper-right edge.</span>
-      </div>
     </section>
   `;
 }
@@ -221,6 +216,34 @@ function renderResult(result: BuildGameResult): string {
         </article>
       `;
     })
+    .join("");
+
+  const allocationRows = [
+    ...result.summary.players.flatMap((player) =>
+      player.tiles.map((tile) => ({
+        id: tile.id,
+        name: tile.name,
+        owner: player.player,
+        ownerClass: `owner-${player.player.toLowerCase().replace(/\s+/g, "-")}`
+      }))
+    ),
+    ...result.summary.shared_tiles.map((tile) => ({
+      id: tile.id,
+      name: tile.name,
+      owner: "Shared",
+      ownerClass: "owner-shared"
+    }))
+  ]
+    .sort((left, right) => Number(left.id) - Number(right.id))
+    .map(
+      (entry) => `
+        <tr class="${entry.ownerClass}">
+          <td>${entry.id}</td>
+          <td>${entry.owner}</td>
+          <td>${entry.name}</td>
+        </tr>
+      `
+    )
     .join("");
 
   const shared = result.summary.shared_tiles.length
@@ -258,13 +281,58 @@ function renderResult(result: BuildGameResult): string {
           <p>Resources and influence are locked to a max spread of 1. Traits, tech skips, wormholes, planets, and legendary planets act as secondary balance signals.</p>
         </div>
       </div>
-      <section class="player-grid">${players}</section>
-      <section class="detail-panels">
-        <article class="detail-card"><h3>Shared Setup Tiles</h3><p>${shared}</p></article>
-        <article class="detail-card"><h3>Unused Tiles</h3><p>${unused}</p></article>
+      <div class="results-tabs" role="tablist" aria-label="Result views">
+        <button type="button" class="results-tab is-active" data-tab-target="cards" aria-selected="true">Player view</button>
+        <button type="button" class="results-tab" data-tab-target="allocation" aria-selected="false">Numerical view</button>
+      </div>
+      <section class="results-pane is-active" data-tab-panel="cards">
+        <section class="player-grid">${players}</section>
+        <section class="detail-panels">
+          <article class="detail-card"><h3>Shared Setup Tiles</h3><p>${shared}</p></article>
+          <article class="detail-card"><h3>Unused Tiles</h3><p>${unused}</p></article>
+        </section>
+      </section>
+      <section class="results-pane" data-tab-panel="allocation" hidden>
+        <article class="detail-card">
+          <h3>Tile Allocation By Number</h3>
+          <div class="allocation-table-wrap">
+            <table class="allocation-table">
+              <thead>
+                <tr>
+                  <th>Tile</th>
+                  <th>Allocated To</th>
+                  <th>Name</th>
+                </tr>
+              </thead>
+              <tbody>${allocationRows}</tbody>
+            </table>
+          </div>
+        </article>
       </section>
     </section>
   `;
+}
+
+function bindResultTabs(): void {
+  const tabButtons = results.querySelectorAll<HTMLButtonElement>(".results-tab");
+  const panes = results.querySelectorAll<HTMLElement>(".results-pane");
+  if (!tabButtons.length || !panes.length) return;
+
+  for (const button of tabButtons) {
+    button.addEventListener("click", () => {
+      const target = button.dataset.tabTarget;
+      for (const tabButton of tabButtons) {
+        const active = tabButton === button;
+        tabButton.classList.toggle("is-active", active);
+        tabButton.setAttribute("aria-selected", active ? "true" : "false");
+      }
+      for (const pane of panes) {
+        const active = pane.dataset.tabPanel === target;
+        pane.classList.toggle("is-active", active);
+        pane.hidden = !active;
+      }
+    });
+  }
 }
 
 app.innerHTML = `
@@ -279,7 +347,7 @@ app.innerHTML = `
           <li>Leave the seed blank for a fresh random result, or enter a seed when you want a deal you can reproduce exactly.</li>
           <li>Deal the listed stacks, place any shared tiles, and ignore the leftovers.</li>
         </ol>
-        <p class="lede">Setup variants change the shape of the final map. Expansion games at 5, 7, and 8 players use official hyperlane layouts, while the other supported counts use the official standard layouts for that ruleset.</p>
+        <p class="lede">Setup variants change the shape of the final map. Expansion games at 4, 5, and 7 players can use hyperlane layouts, while 8-player expansion uses the standard shared-center setup.</p>
       </div>
       <div class="hero-art" aria-hidden="true">
         <svg viewBox="0 0 520 420">
@@ -379,6 +447,7 @@ function generate(): void {
 
     layoutPreview.innerHTML = renderBoardPreview(modeSelect.value as Mode, baseOptions.players, baseOptions.setup);
     results.innerHTML = renderResult(result);
+    bindResultTabs();
   } catch (error) {
     layoutPreview.innerHTML = renderBoardPreview(
       modeSelect.value as Mode,

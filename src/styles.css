@@ -83,6 +83,21 @@ button, input, select { font: inherit; }
 .results-shell { padding: 1.5rem; }
 .results-topline, .info-grid, .detail-panels { display: grid; gap: 1rem; }
 .results-topline { grid-template-columns: 1fr auto; align-items: start; }
+.results-tabs { display: flex; gap: 0.75rem; margin: 1rem 0 1.2rem; flex-wrap: wrap; }
+.results-tab {
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  background: rgba(255,255,255,.04);
+  color: var(--ink);
+  cursor: pointer;
+}
+.results-tab.is-active {
+  background: rgba(255,207,112,.16);
+  border-color: rgba(255,207,112,.45);
+  color: var(--gold);
+}
+.results-pane[hidden] { display: none; }
 .balance-badges, .metric-strip { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 .balance-badges span, .metric-strip span {
   display: inline-flex; padding: 0.45rem 0.7rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05);
@@ -101,6 +116,23 @@ button, input, select { font: inherit; }
 .tile-list { margin: 0.95rem 0 0; padding-left: 1.2rem; }
 .tile-list li + li { margin-top: 0.3rem; }
 .detail-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.2rem; }
+.allocation-table-wrap { overflow-x: auto; }
+.allocation-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+.allocation-table th, .allocation-table td {
+  text-align: left;
+  padding: 0.7rem 0.6rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.allocation-table th { color: var(--muted); font-weight: 600; }
+.allocation-table tbody tr.owner-player-1 { background: rgba(255, 207, 112, 0.08); }
+.allocation-table tbody tr.owner-player-2 { background: rgba(121, 165, 255, 0.08); }
+.allocation-table tbody tr.owner-player-3 { background: rgba(89, 193, 125, 0.08); }
+.allocation-table tbody tr.owner-player-4 { background: rgba(240, 103, 103, 0.08); }
+.allocation-table tbody tr.owner-player-5 { background: rgba(187, 154, 255, 0.08); }
+.allocation-table tbody tr.owner-player-6 { background: rgba(90, 216, 214, 0.08); }
+.allocation-table tbody tr.owner-player-7 { background: rgba(255, 153, 102, 0.08); }
+.allocation-table tbody tr.owner-player-8 { background: rgba(196, 206, 217, 0.08); }
+.allocation-table tbody tr.owner-shared { background: rgba(255,255,255,.04); }
 .error-card { padding: 1rem 1.2rem; color: #ffe4e1; }
 
 @media (max-width: 920px) {
