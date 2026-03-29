@@ -22,6 +22,8 @@ The balancer tries to even out:
 
 It uses the actual board-setup counts from TI4 rules, so it only deals the tiles needed for the selected player count and setup variant. Remaining eligible tiles are reported as unused.
 
+The shared setup counts now live in [data/setup_rules.json](C:\Users\dave\dev\ti4_deck_builder\data\setup_rules.json), and both the TypeScript app and Python tool read from that file.
+
 Supported setup variants:
 
 - `3`: `standard`
@@ -66,7 +68,22 @@ The web UI board preview is driven by [src/layouts.json](C:\Users\dave\dev\ti4_d
 - `pok:5:hyperlanes`
 - `thunders_edge:8:hyperlanes`
 
-Each layout contains a `tiles` array. Every tile object supports:
+Each layout can contain either:
+
+- `tiles`: the explicit board tiles for that configuration
+- `ref`: a reference to another layout key when two configurations share the same board geometry
+
+Example layout alias:
+
+```json
+{
+  "key": "thunders_edge:3:standard",
+  "title": "Thunder's Edge 3-player standard",
+  "ref": "base:3:standard"
+}
+```
+
+When a layout uses `tiles`, every tile object supports:
 
 - `q`: axial hex column
 - `r`: axial hex row

@@ -5,7 +5,7 @@ import { buildGame, type Mode } from "../src/deckBuilder";
 const cases: Array<{ mode: Mode; players: number; setup?: string; seed: number }> = [
   { mode: "base", players: 6, setup: "standard", seed: 7 },
   { mode: "pok", players: 5, setup: "hyperlanes", seed: 42 },
-  { mode: "thunders_edge", players: 8, setup: "hyperlanes", seed: 11 }
+  { mode: "thunders_edge", players: 8, setup: "standard", seed: 11 }
 ];
 
 function normalizeTypeScript(mode: Mode, players: number, setup: string | undefined, seed: number) {

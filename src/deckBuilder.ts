@@ -1,4 +1,5 @@
 import tileData from "../data/tiles.json";
+import setupRulesJson from "../data/setup_rules.json";
 
 export type Mode = "base" | "pok" | "prophecy_of_kings" | "thunders_edge" | "thunder_edge";
 export type Planet = {
@@ -20,6 +21,17 @@ export type Tile = {
   anomalies: string[];
   special: boolean;
   planets: Planet[];
+};
+
+type SetupRule = {
+  per_player: { blue: number; red: number };
+  shared: { blue: number; red: number };
+};
+
+type SetupRulesByPlayers = Record<string, Record<string, SetupRule>>;
+type SetupRulesFile = {
+  base: SetupRulesByPlayers;
+  expansion: SetupRulesByPlayers;
 };
 
 const FEATURE_ORDER = ["resources", "influence", "planets", "traits", "tech_skips", "wormholes", "legendary"] as const;
@@ -76,23 +88,7 @@ const TILES_BY_MODE: Record<Mode, Set<string>> = {
   thunder_edge: new Set(["base", "pok", "thunders_edge"])
 };
 
-const BASE_SETUP_RULES = {
-  3: { standard: { per_player: { blue: 6, red: 2 }, shared: { blue: 0, red: 0 } } },
-  4: { standard: { per_player: { blue: 5, red: 3 }, shared: { blue: 0, red: 0 } } },
-  5: { standard: { per_player: { blue: 4, red: 2 }, shared: { blue: 0, red: 1 } } },
-  6: { standard: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } }
-} as const;
-
-const EXPANSION_SETUP_RULES = {
-  3: { standard: { per_player: { blue: 6, red: 2 }, shared: { blue: 0, red: 0 } } },
-  4: { standard: { per_player: { blue: 5, red: 3 }, shared: { blue: 0, red: 0 } },
-    hyperlanes: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } },
-  5: { standard: { per_player: { blue: 4, red: 2 }, shared: { blue: 0, red: 1 } },
-    hyperlanes: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } },
-  6: { standard: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } },
-  7: { hyperlanes: { per_player: { blue: 4, red: 2 }, shared: { blue: 3, red: 2 } } },
-  8: { standard: { per_player: { blue: 4, red: 2 }, shared: { blue: 2, red: 2 } } }
-} as const;
+const SETUP_RULES = setupRulesJson as SetupRulesFile;
 
 export class SeededRng {
   state: number;
@@ -261,23 +257,23 @@ function summarizeAssignment(decks: Tile[][], capacities: number[]) {
   };
 }
 
-function setupRulesForMode(mode: Mode) {
-  return mode === "base" ? BASE_SETUP_RULES : EXPANSION_SETUP_RULES;
+function setupRulesForMode(mode: Mode): SetupRulesByPlayers {
+  return mode === "base" ? SETUP_RULES.base : SETUP_RULES.expansion;
 }
 
 export function getSetupOptions(mode: Mode, players: number): string[] {
-  const options = setupRulesForMode(mode)[players as keyof ReturnType<typeof setupRulesForMode>];
+  const options = setupRulesForMode(mode)[String(players)];
   return options ? Object.keys(options) : [];
 }
 
 function validateModePlayers(mode: Mode, players: number): void {
-  if (!(players in setupRulesForMode(mode))) {
+  if (!(String(players) in setupRulesForMode(mode))) {
     throw new Error(mode === "base" ? "Base game mode supports 3 through 6 players." : "This mode supports 3 through 8 players.");
   }
 }
 
 export function resolveSetupName(mode: Mode, players: number, setup?: string | null): string {
-  const options = setupRulesForMode(mode)[players as keyof ReturnType<typeof setupRulesForMode>];
+  const options = setupRulesForMode(mode)[String(players)];
   if (!options) throw new Error(mode === "base" ? "Base game mode supports 3 through 6 players." : "This mode supports 3 through 8 players.");
   if (!setup) return Object.keys(options)[0];
   if (!(setup in options)) throw new Error(`Unsupported setup '${setup}' for ${players} players.`);
@@ -352,7 +348,7 @@ export function buildGame(options: { mode: Mode; players: number; setup?: string
   validateModePlayers(mode, players);
   const setupName = resolveSetupName(mode, players, options.setup);
   const rulesByMode = setupRulesForMode(mode);
-  const rules = rulesByMode[players as keyof typeof rulesByMode][setupName as keyof (typeof rulesByMode)[keyof typeof rulesByMode]];
+  const rules = rulesByMode[String(players)][setupName];
   const pool = poolForMode(mode);
   const bluePool = pool.filter((tile) => tile.board_color === "blue");
   const redPool = pool.filter((tile) => tile.board_color === "red");
