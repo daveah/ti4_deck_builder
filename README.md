@@ -58,6 +58,24 @@ To build the production version:
 npm run build
 ```
 
+## WebDAV Deploy
+
+The project includes a WebDAV deployment tool for the built TypeScript app:
+
+```powershell
+$env:WEBDAV_URL = "https://example.com/webdav"
+$env:WEBDAV_USERNAME = "your-user"
+$env:WEBDAV_PASSWORD = "your-password"
+$env:WEBDAV_REMOTE_PATH = "/public_html/ti4"
+npm run deploy:webdav
+```
+
+Optional environment variables:
+
+- `WEBDAV_LOCAL_DIR` to deploy a directory other than `dist`
+- `WEBDAV_CLEAN_REMOTE=true` to delete existing remote files before upload
+- `WEBDAV_SKIP_BUILD=true` to skip the automatic `npm run build` step
+
 ## Tests
 
 Python tests:

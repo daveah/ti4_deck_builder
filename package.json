@@ -9,7 +9,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "deploy:webdav": "node ./scripts/deploy-webdav.mjs"
   },
   "repository": {
     "type": "git",
@@ -20,5 +21,8 @@
     "typescript": "^5.9.3",
     "vite": "^7.1.10",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "webdav": "^5.9.0"
   }
 }
