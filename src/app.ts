@@ -42,7 +42,8 @@ type LayoutDefinition = {
   key: string;
   title: string;
   notes?: string;
-  tiles: BoardTile[];
+  tiles?: BoardTile[];
+  ref?: string;
 };
 
 type LayoutFile = {
@@ -53,7 +54,26 @@ const layoutFile = layoutsJson as LayoutFile;
 
 function getLayoutDefinition(mode: Mode, players: number, setup: string): LayoutDefinition | null {
   const key = `${mode}:${players}:${setup}`;
-  return layoutFile.layouts.find((layout) => layout.key === key) ?? null;
+  const index = new Map(layoutFile.layouts.map((layout) => [layout.key, layout]));
+  const visited = new Set<string>();
+  let layout = index.get(key) ?? null;
+  while (layout?.ref) {
+    if (visited.has(layout.key)) {
+      throw new Error(`Circular layout reference detected for '${layout.key}'.`);
+    }
+    visited.add(layout.key);
+    const target = index.get(layout.ref);
+    if (!target) {
+      throw new Error(`Layout '${layout.key}' references missing key '${layout.ref}'.`);
+    }
+    layout = {
+      ...target,
+      key: layout.key,
+      title: layout.title ?? target.title,
+      notes: layout.notes ?? target.notes
+    };
+  }
+  return layout;
 }
 
 function rotationTransform(cx: number, cy: number, rotation: number | undefined): string {
@@ -105,7 +125,8 @@ function renderBoardPreview(mode: Mode, players: number, setup: string): string 
 
   const size = 26;
   const margin = 34;
-  const positioned = layout.tiles.map((tile) => {
+  const tiles = layout.tiles ?? [];
+  const positioned = tiles.map((tile) => {
     const x = size * SQRT3 * (tile.q + tile.r / 2);
     const y = size * 1.5 * tile.r;
     return { ...tile, x, y };

@@ -6,7 +6,12 @@ import math
 import random
 import secrets
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Iterable
+
+
+ROOT = Path(__file__).resolve().parent
+DATA_DIR = ROOT / "data"
 
 
 FEATURE_ORDER = (
@@ -135,360 +140,48 @@ def tile(
     )
 
 
-def build_tiles() -> list[Tile]:
-    tiles = [
-        tile("19", "Wellon", "base", board_color="blue", planets=[planet("Wellon", 1, 2, traits=["industrial"], techs=["cybernetic"])]),
-        tile("20", "Vefut II", "base", board_color="blue", planets=[planet("Vefut II", 2, 2, traits=["hazardous"])]),
-        tile("21", "Thibah", "base", board_color="blue", planets=[planet("Thibah", 1, 1, traits=["industrial"], techs=["propulsion"])]),
-        tile("22", "Tar'Mann", "base", board_color="blue", planets=[planet("Tar'Mann", 1, 1, traits=["industrial"], techs=["biotic"])]),
-        tile("23", "Saudor", "base", board_color="blue", planets=[planet("Saudor", 2, 2, traits=["industrial"])]),
-        tile("24", "Mehar Xull", "base", board_color="blue", planets=[planet("Mehar Xull", 1, 3, traits=["hazardous"], techs=["warfare"])]),
-        tile("25", "Quann", "base", board_color="blue", planets=[planet("Quann", 2, 1, traits=["cultural"])], wormholes=["beta"]),
-        tile("26", "Lodor", "base", board_color="blue", planets=[planet("Lodor", 3, 1, traits=["cultural"])], wormholes=["alpha"]),
-        tile(
-            "27",
-            "New Albion / Starpoint",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("New Albion", 1, 1, traits=["industrial"], techs=["biotic"]),
-                planet("Starpoint", 3, 1, traits=["hazardous"]),
-            ],
-        ),
-        tile(
-            "28",
-            "Tequ'ran / Torkan",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("Tequ'ran", 2, 0, traits=["hazardous"]),
-                planet("Torkan", 0, 3, traits=["cultural"]),
-            ],
-        ),
-        tile(
-            "29",
-            "Qucen'n / Rarron",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("Qucen'n", 1, 2, traits=["industrial"]),
-                planet("Rarron", 0, 3, traits=["cultural"]),
-            ],
-        ),
-        tile(
-            "30",
-            "Mellon / Zohbat",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("Mellon", 0, 2, traits=["cultural"]),
-                planet("Zohbat", 3, 1, traits=["hazardous"]),
-            ],
-        ),
-        tile(
-            "31",
-            "Lazar / Sakulag",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("Lazar", 1, 0, traits=["industrial"], techs=["cybernetic"]),
-                planet("Sakulag", 2, 1, traits=["hazardous"]),
-            ],
-        ),
-        tile(
-            "32",
-            "Dal Bootha / Xxehan",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("Dal Bootha", 0, 2, traits=["cultural"]),
-                planet("Xxehan", 1, 1, traits=["cultural"]),
-            ],
-        ),
-        tile(
-            "33",
-            "Coorneeq / Resculon",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("Coorneeq", 1, 2, traits=["cultural"]),
-                planet("Resculon", 2, 0, traits=["cultural"]),
-            ],
-        ),
-        tile(
-            "34",
-            "Centauri / Gral",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("Centauri", 1, 3, traits=["cultural"]),
-                planet("Gral", 1, 1, traits=["industrial"], techs=["propulsion"]),
-            ],
-        ),
-        tile(
-            "35",
-            "Bereg / Lirta IV",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("Bereg", 3, 1, traits=["hazardous"]),
-                planet("Lirta IV", 2, 3, traits=["hazardous"]),
-            ],
-        ),
-        tile(
-            "36",
-            "Arnor / Lor",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("Arnor", 1, 2, traits=["industrial"]),
-                planet("Lor", 2, 1, traits=["industrial"]),
-            ],
-        ),
-        tile(
-            "37",
-            "Arinam / Meer",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("Arinam", 1, 2, traits=["cultural"]),
-                planet("Meer", 0, 4, traits=["hazardous"], techs=["warfare"]),
-            ],
-        ),
-        tile(
-            "38",
-            "Abyz / Fria",
-            "base",
-            board_color="blue",
-            planets=[
-                planet("Abyz", 3, 0, traits=["hazardous"]),
-                planet("Fria", 2, 0, traits=["hazardous"]),
-            ],
-        ),
-        tile("39", "Alpha Wormhole", "base", board_color="red", wormholes=["alpha"]),
-        tile("40", "Beta Wormhole", "base", board_color="red", wormholes=["beta"]),
-        tile("41", "Gravity Rift", "base", board_color="red", anomalies=["gravity_rift"]),
-        tile("42", "Nebula", "base", board_color="red", anomalies=["nebula"]),
-        tile("43", "Supernova", "base", board_color="red", anomalies=["supernova"]),
-        tile("44", "Asteroid Field", "base", board_color="red", anomalies=["asteroid_field"]),
-        tile("45", "Asteroid Field", "base", board_color="red", anomalies=["asteroid_field"]),
-        tile("46", "Empty Space", "base", board_color="red"),
-        tile("47", "Empty Space", "base", board_color="red"),
-        tile("48", "Empty Space", "base", board_color="red"),
-        tile("49", "Empty Space", "base", board_color="red"),
-        tile("50", "Empty Space", "base", board_color="red"),
-        tile("59", "Archon Vail", "pok", board_color="blue", planets=[planet("Archon Vail", 1, 3, traits=["hazardous"], techs=["propulsion"])]),
-        tile("60", "Perimeter", "pok", board_color="blue", planets=[planet("Perimeter", 2, 1, traits=["industrial"])]),
-        tile("61", "Ang", "pok", board_color="blue", planets=[planet("Ang", 2, 0, traits=["industrial"], techs=["warfare"])]),
-        tile("62", "Sem-Lore", "pok", board_color="blue", planets=[planet("Sem-Lore", 3, 2, traits=["cultural"], techs=["cybernetic"])]),
-        tile("63", "Vorhal", "pok", board_color="blue", planets=[planet("Vorhal", 0, 2, traits=["cultural"], techs=["biotic"])]),
-        tile("64", "Atlas", "pok", board_color="blue", planets=[planet("Atlas", 3, 1, traits=["hazardous"])], wormholes=["beta"]),
-        tile("65", "Primor", "pok", board_color="blue", planets=[planet("Primor", 2, 1, traits=["cultural"], legendary=True)]),
-        tile("66", "Hope's End", "pok", board_color="blue", planets=[planet("Hope's End", 3, 0, traits=["hazardous"], legendary=True)]),
-        tile("67", "Cormund", "pok", board_color="red", planets=[planet("Cormund", 2, 0, traits=["hazardous"])], anomalies=["gravity_rift"]),
-        tile("68", "Everra", "pok", board_color="red", planets=[planet("Everra", 3, 1, traits=["cultural"])], anomalies=["nebula"]),
-        tile(
-            "69",
-            "Accoen / Jeol Ir",
-            "pok",
-            board_color="blue",
-            planets=[
-                planet("Accoen", 2, 3, traits=["industrial"]),
-                planet("Jeol Ir", 2, 3, traits=["industrial"]),
-            ],
-        ),
-        tile(
-            "70",
-            "Kraag / Siig",
-            "pok",
-            board_color="blue",
-            planets=[
-                planet("Kraag", 2, 1, traits=["hazardous"]),
-                planet("Siig", 0, 2, traits=["hazardous"]),
-            ],
-        ),
-        tile(
-            "71",
-            "Bakal / Alio Prima",
-            "pok",
-            board_color="blue",
-            planets=[
-                planet("Bakal", 3, 2, traits=["industrial"]),
-                planet("Alio Prima", 1, 1, traits=["cultural"]),
-            ],
-        ),
-        tile(
-            "72",
-            "Lisis / Velnor",
-            "pok",
-            board_color="blue",
-            planets=[
-                planet("Lisis", 2, 2, traits=["industrial"]),
-                planet("Velnor", 2, 1, traits=["industrial"], techs=["warfare"]),
-            ],
-        ),
-        tile(
-            "73",
-            "Cealdri / Xanhact",
-            "pok",
-            board_color="blue",
-            planets=[
-                planet("Cealdri", 0, 2, traits=["cultural"], techs=["cybernetic"]),
-                planet("Xanhact", 0, 1, traits=["hazardous"]),
-            ],
-        ),
-        tile(
-            "74",
-            "Vega Major / Vega Minor",
-            "pok",
-            board_color="blue",
-            planets=[
-                planet("Vega Major", 2, 1, traits=["cultural"]),
-                planet("Vega Minor", 1, 2, traits=["cultural"], techs=["propulsion"]),
-            ],
-        ),
-        tile(
-            "75",
-            "Abaddon / Loki / Ashtroth",
-            "pok",
-            board_color="blue",
-            planets=[
-                planet("Abaddon", 1, 0, traits=["cultural"]),
-                planet("Loki", 1, 2, traits=["cultural"]),
-                planet("Ashtroth", 2, 0, traits=["hazardous"]),
-            ],
-        ),
-        tile(
-            "76",
-            "Rigel I / Rigel II / Rigel III",
-            "pok",
-            board_color="blue",
-            planets=[
-                planet("Rigel I", 0, 1, traits=["hazardous"]),
-                planet("Rigel II", 1, 2, traits=["industrial"]),
-                planet("Rigel III", 1, 1, traits=["industrial"], techs=["biotic"]),
-            ],
-        ),
-        tile("77", "Empty Space", "pok", board_color="red"),
-        tile("78", "Empty Space", "pok", board_color="red"),
-        tile("79", "Asteroid Field / Alpha Wormhole", "pok", board_color="red", wormholes=["alpha"], anomalies=["asteroid_field"]),
-        tile("80", "Supernova", "pok", board_color="red", anomalies=["supernova"]),
-        tile("97", "Faunus", "thunders_edge", board_color="blue", planets=[planet("Faunus", 1, 3, traits=["industrial"], techs=["biotic"], legendary=True)]),
-        tile("98", "Garbozia", "thunders_edge", board_color="blue", planets=[planet("Garbozia", 2, 1, traits=["hazardous"], legendary=True)]),
-        tile("99", "Emelpar", "thunders_edge", board_color="blue", planets=[planet("Emelpar", 0, 2, traits=["cultural"], legendary=True)]),
-        tile("100", "Tempesta", "thunders_edge", board_color="blue", planets=[planet("Tempesta", 1, 1, traits=["hazardous"], techs=["propulsion"], legendary=True)]),
-        tile(
-            "101",
-            "Olergodt",
-            "thunders_edge",
-            board_color="blue",
-            planets=[planet("Olergodt", 2, 1, traits=["cultural", "hazardous"], techs=["cybernetic", "warfare"])],
-        ),
-        tile("102", "Andeara", "thunders_edge", board_color="blue", planets=[planet("Andeara", 1, 1, traits=["industrial"], techs=["propulsion"])], wormholes=["alpha"]),
-        tile("103", "Vira-Pics III", "thunders_edge", board_color="blue", planets=[planet("Vira-Pics III", 2, 3, traits=["cultural", "hazardous"])]),
-        tile("104", "Lesab", "thunders_edge", board_color="blue", planets=[planet("Lesab", 2, 1, traits=["industrial", "hazardous"])]),
-        tile(
-            "105",
-            "New Terra / Tinnes",
-            "thunders_edge",
-            board_color="blue",
-            planets=[
-                planet("New Terra", 1, 1, traits=["industrial"], techs=["biotic"]),
-                planet("Tinnes", 2, 1, traits=["industrial", "hazardous"], techs=["biotic"]),
-            ],
-        ),
-        tile(
-            "106",
-            "Cresius / Lazul Rex",
-            "thunders_edge",
-            board_color="blue",
-            planets=[
-                planet("Cresius", 0, 1, traits=["hazardous"]),
-                planet("Lazul Rex", 2, 2, traits=["cultural", "industrial"]),
-            ],
-        ),
-        tile(
-            "107",
-            "Tiamat / Hercalor",
-            "thunders_edge",
-            board_color="blue",
-            planets=[
-                planet("Tiamat", 2, 1, traits=["cultural"], techs=["cybernetic", "cybernetic"]),
-                planet("Hercalor", 1, 0, traits=["industrial"]),
-            ],
-        ),
-        tile(
-            "108",
-            "Kostboth / Capha",
-            "thunders_edge",
-            board_color="blue",
-            planets=[
-                planet("Kostboth", 0, 1, traits=["cultural"]),
-                planet("Capha", 3, 0, traits=["hazardous"]),
-            ],
-        ),
-        tile(
-            "109",
-            "Bellatrix / Tsion Station",
-            "thunders_edge",
-            board_color="blue",
-            planets=[
-                planet("Bellatrix", 1, 2, traits=["cultural"]),
-                planet("Tsion Station", 1, 1, station=True),
-            ],
-        ),
-        tile(
-            "110",
-            "Horizon / El'Nath / Luthien VI",
-            "thunders_edge",
-            board_color="blue",
-            planets=[
-                planet("Horizon", 1, 2, traits=["cultural"]),
-                planet("El'Nath", 2, 0, traits=["hazardous"]),
-                planet("Luthien VI", 3, 1, traits=["hazardous"]),
-            ],
-        ),
-        tile(
-            "111",
-            "Tarana / Oluz Station",
-            "thunders_edge",
-            board_color="blue",
-            planets=[
-                planet("Tarana", 1, 2, traits=["cultural", "industrial"]),
-                planet("Oluz Station", 1, 1, station=True),
-            ],
-        ),
-        tile("113", "Gravity Rift / Beta Wormhole", "thunders_edge", board_color="red", wormholes=["beta"], anomalies=["gravity_rift"]),
-        tile("114", "Entropic Scar", "thunders_edge", board_color="red", anomalies=["entropic_scar"]),
-        tile(
-            "115",
-            "Industrex / Asteroid Field",
-            "thunders_edge",
-            board_color="red",
-            planets=[planet("Industrex", 2, 0, traits=["industrial"], techs=["warfare"], legendary=True)],
-            anomalies=["asteroid_field"],
-        ),
-        tile(
-            "116",
-            "Lemox / Entropic Scar",
-            "thunders_edge",
-            board_color="red",
-            planets=[planet("Lemox", 0, 3, traits=["industrial"])],
-            anomalies=["entropic_scar"],
-        ),
-        tile(
-            "117",
-            "The Watchtower / Gravity Rift / Asteroid Field",
-            "thunders_edge",
-            board_color="red",
-            planets=[planet("The Watchtower", 1, 1, station=True)],
-            anomalies=["gravity_rift", "asteroid_field"],
-        ),
-    ]
+def load_tiles_from_json(path: Path | None = None) -> list[Tile]:
+    source = path or DATA_DIR / "tiles.json"
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    tiles: list[Tile] = []
+    for entry in payload:
+        planets = [
+            planet(
+                planet_entry["name"],
+                planet_entry["resources"],
+                planet_entry["influence"],
+                traits=planet_entry.get("traits", ()),
+                techs=planet_entry.get("techs", ()),
+                legendary=planet_entry.get("legendary", False),
+                station=planet_entry.get("station", False),
+            )
+            for planet_entry in entry.get("planets", [])
+        ]
+        tiles.append(
+            tile(
+                entry["tile_id"],
+                entry["name"],
+                entry["expansion"],
+                board_color=entry["board_color"],
+                planets=planets,
+                wormholes=entry.get("wormholes", ()),
+                anomalies=entry.get("anomalies", ()),
+                special=entry.get("special", False),
+            )
+        )
     return tiles
 
 
-ALL_TILES = build_tiles()
+def load_setup_rules(path: Path | None = None) -> dict[str, dict[int, dict[str, dict[str, dict[str, int]]]]]:
+    source = path or DATA_DIR / "setup_rules.json"
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    return {
+        group: {int(players): setups for players, setups in group_rules.items()}
+        for group, group_rules in payload.items()
+    }
+
+
+ALL_TILES = load_tiles_from_json()
 TILES_BY_MODE = {
     "base": {"base"},
     "pok": {"base", "pok"},
@@ -496,44 +189,7 @@ TILES_BY_MODE = {
     "thunders_edge": {"base", "pok", "thunders_edge"},
     "thunder_edge": {"base", "pok", "thunders_edge"},
 }
-
-BASE_SETUP_RULES = {
-    3: {
-        "standard": {"per_player": {"blue": 6, "red": 2}, "shared": {"blue": 0, "red": 0}},
-    },
-    4: {
-        "standard": {"per_player": {"blue": 5, "red": 3}, "shared": {"blue": 0, "red": 0}},
-    },
-    5: {
-        "standard": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 0, "red": 1}},
-    },
-    6: {
-        "standard": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
-    },
-}
-
-EXPANSION_SETUP_RULES = {
-    3: {
-        "standard": {"per_player": {"blue": 6, "red": 2}, "shared": {"blue": 0, "red": 0}},
-    },
-    4: {
-        "standard": {"per_player": {"blue": 5, "red": 3}, "shared": {"blue": 0, "red": 0}},
-        "hyperlanes": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
-    },
-    5: {
-        "standard": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 0, "red": 1}},
-        "hyperlanes": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
-    },
-    6: {
-        "standard": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
-    },
-    7: {
-        "hyperlanes": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 3, "red": 2}},
-    },
-    8: {
-        "standard": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 2, "red": 2}},
-    },
-}
+SETUP_RULES = load_setup_rules()
 
 
 def feature_totals(tiles: Iterable[Tile]) -> dict[str, float]:
@@ -708,7 +364,7 @@ def deal_color_group(
 
 
 def setup_rules_for_mode(mode: str) -> dict[int, dict[str, dict[str, dict[str, int]]]]:
-    return BASE_SETUP_RULES if mode == "base" else EXPANSION_SETUP_RULES
+    return SETUP_RULES["base"] if mode == "base" else SETUP_RULES["expansion"]
 
 
 def validate_mode_players(mode: str, players: int) -> None:
