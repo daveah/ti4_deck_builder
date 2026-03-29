@@ -518,8 +518,10 @@ EXPANSION_SETUP_RULES = {
     },
     4: {
         "standard": {"per_player": {"blue": 5, "red": 3}, "shared": {"blue": 0, "red": 0}},
+        "hyperlanes": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
     },
     5: {
+        "standard": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 0, "red": 1}},
         "hyperlanes": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
     },
     6: {
@@ -529,7 +531,7 @@ EXPANSION_SETUP_RULES = {
         "hyperlanes": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 3, "red": 2}},
     },
     8: {
-        "hyperlanes": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 2, "red": 2}},
+        "standard": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 2, "red": 2}},
     },
 }
 

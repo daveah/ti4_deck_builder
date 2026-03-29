@@ -70,11 +70,19 @@ Each layout contains a `tiles` array. Every tile object supports:
 
 - `q`: axial hex column
 - `r`: axial hex row
-- `kind`: `red`, `blue`, `green`, or `hyperlane`
+- `kind`: `red`, `green`, `hyperlane`, `blue`, or one of `blue1`, `blue2`, `blue3`, `blue4`
 - `label`: optional text such as `MR`, `H1`, or `S1`
 - `hyperlaneId`: optional hyperlane tile id such as `83A`
 - `rotation`: optional clockwise rotation in 60-degree steps, from `0` to `5`
 - `connections`: optional hyperlane edge pairs such as `[[0,2],[3,5]]`
+
+Blue ring shades:
+
+- `blue1`: lightest blue
+- `blue2`: medium-light blue
+- `blue3`: medium-dark blue
+- `blue4`: darkest blue
+- `blue`: legacy/default mid-blue alias
 
 Example:
 

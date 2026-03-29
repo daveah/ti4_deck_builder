@@ -74,6 +74,10 @@ button, input, select { font: inherit; }
 }
 .legend-swatch.red { background: #ffcf70; }
 .legend-swatch.blue { background: #88b6ff; }
+.legend-swatch.blue1 { background: #cfe1ff; }
+.legend-swatch.blue2 { background: #88b6ff; }
+.legend-swatch.blue3 { background: #4e86df; }
+.legend-swatch.blue4 { background: #204b93; }
 .legend-swatch.green { background: #59c17d; }
 .legend-swatch.hyperlane { background: #2d3b59; }
 .results-shell { padding: 1.5rem; }

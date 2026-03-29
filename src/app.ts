@@ -18,15 +18,15 @@ function describeSetupVariant(mode: Mode, players: number, setup: string): strin
     return "Standard uses the official default board setup for this player count.";
   }
   if (setup === "hyperlanes") {
+    if (players === 4) return "The Thunder's Edge 4-player expansion setup uses two hyperlane fans.";
     if (players === 5) return "The official 5-player expansion setup uses a hyperlane fan below the board and no shared center tiles.";
-    if (players === 7) return "The official 7-player expansion setup uses hyperlanes plus five shared faceup tiles adjacent to Mecatol Rex.";
-    if (players === 8) return "The official 8-player expansion setup uses hyperlanes plus four shared faceup tiles adjacent to Mecatol Rex.";
+    if (players === 7) return "The official 7-player expansion setup uses a hyperlane fan and no shared center tiles.";
     return "Hyperlane layouts use the official expansion board templates for larger player counts.";
   }
   return "This setup changes how many blue and red tiles each player drafts and whether shared center tiles are used.";
 }
 
-type BoardTileKind = "blue" | "green" | "red" | "hyperlane";
+type BoardTileKind = "blue" | "blue1" | "blue2" | "blue3" | "blue4" | "green" | "red" | "hyperlane";
 
 type BoardTile = {
   q: number;
@@ -66,12 +66,12 @@ function renderHyperlaneGlyph(tile: BoardTile, cx: number, cy: number): string {
     [0, 3],
     [1, 4]
   ];
-  const radius = 14;
+  const edgeRadius = 22;
   const edgePoint = (edge: number) => {
-    const theta = (Math.PI / 180) * (60 * edge - 30);
+    const theta = (Math.PI / 180) * (60 * edge);
     return {
-      x: cx + radius * Math.cos(theta),
-      y: cy + radius * Math.sin(theta)
+      x: cx + edgeRadius * Math.cos(theta),
+      y: cy + edgeRadius * Math.sin(theta)
     };
   };
 
@@ -126,6 +126,10 @@ function renderBoardPreview(mode: Mode, players: number, setup: string): string 
   const fills: Record<BoardTileKind, string> = {
     red: "#ffcf70",
     blue: "#88b6ff",
+    blue1: "#cfe1ff",
+    blue2: "#88b6ff",
+    blue3: "#4e86df",
+    blue4: "#204b93",
     green: "#59c17d",
     hyperlane: "#2d3b59"
   };
@@ -163,7 +167,8 @@ function renderBoardPreview(mode: Mode, players: number, setup: string): string 
       </svg>
       <div class="preview-legend">
         <span><i class="legend-swatch red"></i>Red: Mecatol Rex / special center</span>
-        <span><i class="legend-swatch blue"></i>Blue: normal system slot</span>
+        <span><i class="legend-swatch blue1"></i><i class="legend-swatch blue2"></i><i class="legend-swatch blue3"></i><i class="legend-swatch blue4"></i>Blue ring shades: use <code>blue1</code> through <code>blue4</code> for outer-to-inner or any ring scheme you want.</span>
+        <span><i class="legend-swatch blue"></i><code>blue</code> still works as the default mid-blue system slot.</span>
         <span><i class="legend-swatch green"></i>Green: home system slot</span>
         <span><i class="legend-swatch hyperlane"></i>Hyperlane: variant + optional rotation/connections</span>
         <span>Coordinates come from <code>src/layouts.json</code>.</span>

@@ -85,11 +85,13 @@ const BASE_SETUP_RULES = {
 
 const EXPANSION_SETUP_RULES = {
   3: { standard: { per_player: { blue: 6, red: 2 }, shared: { blue: 0, red: 0 } } },
-  4: { standard: { per_player: { blue: 5, red: 3 }, shared: { blue: 0, red: 0 } } },
-  5: { hyperlanes: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } },
+  4: { standard: { per_player: { blue: 5, red: 3 }, shared: { blue: 0, red: 0 } },
+    hyperlanes: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } },
+  5: { standard: { per_player: { blue: 4, red: 2 }, shared: { blue: 0, red: 1 } },
+    hyperlanes: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } },
   6: { standard: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } },
   7: { hyperlanes: { per_player: { blue: 4, red: 2 }, shared: { blue: 3, red: 2 } } },
-  8: { hyperlanes: { per_player: { blue: 4, red: 2 }, shared: { blue: 2, red: 2 } } }
+  8: { standard: { per_player: { blue: 4, red: 2 }, shared: { blue: 2, red: 2 } } }
 } as const;
 
 export class SeededRng {
