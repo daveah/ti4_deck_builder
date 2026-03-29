@@ -1,5 +1,6 @@
 import "./styles.css";
-import { buildGame, resolveSetupName, type BuildGameResult, type Mode } from "./deckBuilder";
+import { buildGame, getSetupOptions, resolveSetupName, type BuildGameResult, type Mode } from "./deckBuilder";
+import layoutsJson from "./layouts.json";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 
@@ -7,37 +8,170 @@ if (!app) throw new Error("App root not found.");
 
 const modes: Mode[] = ["base", "pok", "thunders_edge"];
 const RANDOM_RETRY_LIMIT = 40;
+const SQRT3 = Math.sqrt(3);
 
-function getSetupOptions(players: number): string[] {
-  return ["standard", "hyperlanes", "alternate", "large"].filter((setup) => {
-    try {
-      return resolveSetupName(players, setup) === setup;
-    } catch {
-      return false;
-    }
-  });
-}
-
-function describeSetupVariant(players: number, setup: string): string {
+function describeSetupVariant(mode: Mode, players: number, setup: string): string {
   if (setup === "standard") {
-    if (players === 5) {
-      return "Standard 5-player maps use a shared extra red tile near Mecatol Rex instead of the tighter hyperlane layout.";
+    if (mode === "base" && players === 5) {
+      return "Base-game 5-player setup uses one shared faceup red tile adjacent to Mecatol Rex.";
     }
-    if (players === 7 || players === 8) {
-      return "Standard 7- and 8-player maps use extra shared faceup tiles in the center to complete the larger board.";
-    }
-    return "Standard uses the default official draft for this player count.";
+    return "Standard uses the official default board setup for this player count.";
   }
   if (setup === "hyperlanes") {
-    return "Hyperlanes are the compact 5-player layout. Each player drafts fewer blue tiles and no shared center tile is added.";
-  }
-  if (setup === "alternate") {
-    return "Alternate is the tighter 7- or 8-player layout with no extra shared center tiles.";
-  }
-  if (setup === "large") {
-    return "Large is the expanded 6-player map where everyone drafts a much bigger slice of the galaxy.";
+    if (players === 5) return "The official 5-player expansion setup uses a hyperlane fan below the board and no shared center tiles.";
+    if (players === 7) return "The official 7-player expansion setup uses hyperlanes plus five shared faceup tiles adjacent to Mecatol Rex.";
+    if (players === 8) return "The official 8-player expansion setup uses hyperlanes plus four shared faceup tiles adjacent to Mecatol Rex.";
+    return "Hyperlane layouts use the official expansion board templates for larger player counts.";
   }
   return "This setup changes how many blue and red tiles each player drafts and whether shared center tiles are used.";
+}
+
+type BoardTileKind = "blue" | "green" | "red" | "hyperlane";
+
+type BoardTile = {
+  q: number;
+  r: number;
+  kind: BoardTileKind;
+  label?: string;
+  hyperlaneId?: string;
+  rotation?: number;
+  connections?: number[][];
+};
+
+type LayoutDefinition = {
+  key: string;
+  title: string;
+  notes?: string;
+  tiles: BoardTile[];
+};
+
+type LayoutFile = {
+  layouts: LayoutDefinition[];
+};
+
+const layoutFile = layoutsJson as LayoutFile;
+
+function getLayoutDefinition(mode: Mode, players: number, setup: string): LayoutDefinition | null {
+  const key = `${mode}:${players}:${setup}`;
+  return layoutFile.layouts.find((layout) => layout.key === key) ?? null;
+}
+
+function rotationTransform(cx: number, cy: number, rotation: number | undefined): string {
+  const normalized = ((rotation ?? 0) % 6 + 6) % 6;
+  return normalized === 0 ? "" : ` transform="rotate(${normalized * 60} ${cx} ${cy})"`;
+}
+
+function renderHyperlaneGlyph(tile: BoardTile, cx: number, cy: number): string {
+  const pairs = tile.connections ?? [
+    [0, 3],
+    [1, 4]
+  ];
+  const radius = 14;
+  const edgePoint = (edge: number) => {
+    const theta = (Math.PI / 180) * (60 * edge - 30);
+    return {
+      x: cx + radius * Math.cos(theta),
+      y: cy + radius * Math.sin(theta)
+    };
+  };
+
+  const paths = pairs
+    .map(([from, to]) => {
+      const start = edgePoint(from);
+      const end = edgePoint(to);
+      return `<line x1="${start.x}" y1="${start.y}" x2="${end.x}" y2="${end.y}" stroke="#f5efe0" stroke-width="3" stroke-linecap="round" />`;
+    })
+    .join("");
+
+  const label = tile.hyperlaneId ? `<text x="${cx}" y="${cy + 18}" text-anchor="middle" font-size="8" font-weight="700" fill="#f5efe0">${tile.hyperlaneId}</text>` : "";
+  return `<g${rotationTransform(cx, cy, tile.rotation)}>${paths}${label}</g>`;
+}
+
+function renderBoardPreview(mode: Mode, players: number, setup: string): string {
+  const layout = getLayoutDefinition(mode, players, setup);
+  const captions = [`${mode} mode`, `${players} players`, `${setup} layout`];
+  if (!layout) {
+    return `
+      <section class="preview-card">
+        <div class="preview-copy">
+          <p class="eyebrow">Board Layout Preview</p>
+          <h3>No JSON layout configured yet</h3>
+          <p>Add this configuration to <code>src/layouts.json</code> to draw the board for this selection.</p>
+          <div class="preview-tags">${captions.map((caption) => `<span>${caption}</span>`).join("")}</div>
+        </div>
+      </section>
+    `;
+  }
+
+  const size = 26;
+  const margin = 34;
+  const positioned = layout.tiles.map((tile) => {
+    const x = size * SQRT3 * (tile.q + tile.r / 2);
+    const y = size * 1.5 * tile.r;
+    return { ...tile, x, y };
+  });
+  const minX = Math.min(...positioned.map((tile) => tile.x));
+  const maxX = Math.max(...positioned.map((tile) => tile.x));
+  const minY = Math.min(...positioned.map((tile) => tile.y));
+  const maxY = Math.max(...positioned.map((tile) => tile.y));
+  const width = maxX - minX + margin * 2;
+  const height = maxY - minY + margin * 2;
+
+  const points = (cx: number, cy: number) =>
+    Array.from({ length: 6 }, (_, index) => {
+      const theta = (Math.PI / 180) * (60 * index - 30);
+      return `${cx + size * Math.cos(theta)},${cy + size * Math.sin(theta)}`;
+    }).join(" ");
+
+  const fills: Record<BoardTileKind, string> = {
+    red: "#ffcf70",
+    blue: "#88b6ff",
+    green: "#59c17d",
+    hyperlane: "#2d3b59"
+  };
+
+  return `
+    <section class="preview-card">
+      <div class="preview-copy">
+        <p class="eyebrow">Board Layout Preview</p>
+        <h3>${layout.title}</h3>
+        <p>${describeSetupVariant(mode, players, setup)}</p>
+        ${layout.notes ? `<p>${layout.notes}</p>` : ""}
+        <div class="preview-tags">${captions.map((caption) => `<span>${caption}</span>`).join("")}</div>
+      </div>
+      <svg class="board-preview" viewBox="0 0 ${width} ${height}" role="img" aria-label="Board layout preview for ${players} player ${setup} configuration">
+        <rect x="0" y="0" width="${width}" height="${height}" rx="24" fill="rgba(255,255,255,0.03)" />
+        ${positioned
+          .map((tile) => {
+            const cx = tile.x - minX + margin;
+            const cy = tile.y - minY + margin;
+            const textColor = tile.kind === "red" ? "#09111d" : "#f5efe0";
+            const primaryLabel = tile.label ? `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="10" font-weight="700" fill="${textColor}">${tile.label}</text>` : "";
+            const secondaryLabel =
+              tile.kind === "hyperlane" && tile.label
+                ? `<text x="${cx}" y="${cy - 8}" text-anchor="middle" font-size="7" font-weight="700" fill="#f5efe0">${tile.label}</text>`
+                : "";
+            return `
+              <g>
+                <polygon points="${points(cx, cy)}" fill="${fills[tile.kind]}" stroke="rgba(255,255,255,0.2)" stroke-width="2" />
+                ${tile.kind === "hyperlane" ? renderHyperlaneGlyph(tile, cx, cy) : ""}
+                ${tile.kind === "hyperlane" ? secondaryLabel : primaryLabel}
+              </g>
+            `;
+          })
+          .join("")}
+      </svg>
+      <div class="preview-legend">
+        <span><i class="legend-swatch red"></i>Red: Mecatol Rex / special center</span>
+        <span><i class="legend-swatch blue"></i>Blue: normal system slot</span>
+        <span><i class="legend-swatch green"></i>Green: home system slot</span>
+        <span><i class="legend-swatch hyperlane"></i>Hyperlane: variant + optional rotation/connections</span>
+        <span>Coordinates come from <code>src/layouts.json</code>.</span>
+        <span>Axial neighbors: <code>(q,r-1)</code>, <code>(q+1,r-1)</code>, <code>(q+1,r)</code>, <code>(q,r+1)</code>, <code>(q-1,r+1)</code>, <code>(q-1,r)</code>.</span>
+        <span>Hyperlane edge numbers run clockwise as <code>0,1,2,3,4,5</code>, starting at the upper-right edge.</span>
+      </div>
+    </section>
+  `;
 }
 
 function renderResult(result: BuildGameResult): string {
@@ -91,7 +225,7 @@ function renderResult(result: BuildGameResult): string {
         </div>
         <div class="info-panel">
           <h3>Setup Variant</h3>
-          <p>${describeSetupVariant(result.players, result.setup)}</p>
+          <p>${describeSetupVariant(result.mode, result.players, result.setup)}</p>
         </div>
         <div class="info-panel">
           <h3>What Gets Balanced</h3>
@@ -113,13 +247,13 @@ app.innerHTML = `
       <div class="hero-copy">
         <p class="eyebrow">Twilight Imperium 4</p>
         <h1>Build a galaxy draft that feels fair before the first ship moves.</h1>
-        <p class="lede">Generate balanced system-tile draft stacks for your table, using the correct number of blue and red tiles for each supported setup style and clear callouts for shared center tiles and leftovers.</p>
+        <p class="lede">Generate balanced system-tile draft stacks for your table, using the official setup rules for the base game, Prophecy of Kings, and Thunder's Edge, with clear callouts for shared center tiles and leftovers.</p>
         <ol class="instruction-list">
-          <li>Pick your ruleset, player count, and setup map variant such as standard, hyperlanes, alternate, or large when that player count allows it.</li>
+          <li>Pick your ruleset, player count, and the official setup map variant available for that configuration.</li>
           <li>Leave the seed blank for a fresh random result, or enter a seed when you want a deal you can reproduce exactly.</li>
           <li>Deal the listed stacks, place any shared tiles, and ignore the leftovers.</li>
         </ol>
-        <p class="lede">Setup variants change the shape of the final map. Some layouts use extra shared faceup tiles near Mecatol Rex, while others use tighter hyperlane or alternate maps with fewer drafted tiles per player.</p>
+        <p class="lede">Setup variants change the shape of the final map. Expansion games at 5, 7, and 8 players use official hyperlane layouts, while the other supported counts use the official standard layouts for that ruleset.</p>
       </div>
       <div class="hero-art" aria-hidden="true">
         <svg viewBox="0 0 520 420">
@@ -156,6 +290,7 @@ app.innerHTML = `
         <label><span>Restarts</span><input id="restarts" type="number" min="10" max="5000" value="500" /></label>
         <button type="submit">Generate balanced decks</button>
       </form>
+      <div id="layout-preview"></div>
     </section>
     <section id="results"></section>
   </main>
@@ -168,17 +303,20 @@ const seedInput = document.querySelector<HTMLInputElement>("#seed");
 const restartInput = document.querySelector<HTMLInputElement>("#restarts");
 const form = document.querySelector<HTMLFormElement>("#deck-form");
 const results = document.querySelector<HTMLElement>("#results");
+const layoutPreview = document.querySelector<HTMLElement>("#layout-preview");
 
-if (!playersInput || !setupSelect || !modeSelect || !seedInput || !restartInput || !form || !results) {
+if (!playersInput || !setupSelect || !modeSelect || !seedInput || !restartInput || !form || !results || !layoutPreview) {
   throw new Error("UI failed to initialize.");
 }
 
 function refreshSetups(): void {
   const players = Number.parseInt(playersInput.value, 10);
-  const options = getSetupOptions(players);
-  const fallback = resolveSetupName(players, null);
+  const mode = modeSelect.value as Mode;
+  const options = getSetupOptions(mode, players);
+  const fallback = resolveSetupName(mode, players, null);
   setupSelect.innerHTML = options.map((option) => `<option value="${option}">${option}</option>`).join("");
   setupSelect.value = options.includes(fallback) ? fallback : options[0];
+  layoutPreview.innerHTML = renderBoardPreview(mode, players, setupSelect.value);
 }
 
 function generate(): void {
@@ -213,8 +351,14 @@ function generate(): void {
       throw new Error("Unable to generate a balanced deck after multiple random attempts.");
     }
 
+    layoutPreview.innerHTML = renderBoardPreview(modeSelect.value as Mode, baseOptions.players, baseOptions.setup);
     results.innerHTML = renderResult(result);
   } catch (error) {
+    layoutPreview.innerHTML = renderBoardPreview(
+      modeSelect.value as Mode,
+      Number.parseInt(playersInput.value, 10),
+      setupSelect.value
+    );
     results.innerHTML = `<p class="error-card">${error instanceof Error ? error.message : String(error)}</p>`;
   }
 }
@@ -223,7 +367,10 @@ playersInput.addEventListener("change", () => {
   refreshSetups();
   generate();
 });
-modeSelect.addEventListener("change", generate);
+modeSelect.addEventListener("change", () => {
+  refreshSetups();
+  generate();
+});
 setupSelect.addEventListener("change", generate);
 form.addEventListener("submit", (event) => {
   event.preventDefault();

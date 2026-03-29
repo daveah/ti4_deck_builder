@@ -41,7 +41,7 @@ class DeckBuilderTests(unittest.TestCase):
         self.assertLessEqual(result["summary"]["max_spread"]["influence"], 1)
 
     def test_five_player_default_setup_is_hyperlanes(self) -> None:
-        self.assertEqual(builder.resolve_setup_name(5, None), "hyperlanes")
+        self.assertEqual(builder.resolve_setup_name("pok", 5, None), "hyperlanes")
 
     def test_summary_uses_combined_trait_and_skip_metrics(self) -> None:
         result = builder.build_game(builder.pool_for_mode("base"), mode="base", players=6, setup="standard", seed=7, restarts=50)
