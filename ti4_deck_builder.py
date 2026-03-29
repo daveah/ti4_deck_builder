@@ -4,6 +4,7 @@ import argparse
 import json
 import math
 import random
+import secrets
 from dataclasses import dataclass, field
 from typing import Iterable
 
@@ -30,6 +31,23 @@ FEATURE_WEIGHTS = {
 
 PRIMARY_CONSTRAINT_FEATURES = ("resources", "influence")
 MAX_PRIMARY_SPREAD = 1.0
+
+
+class SeededRng:
+    def __init__(self, seed: int | None = None) -> None:
+        value = secrets.randbits(32) if seed is None else seed
+        self.state = value & 0xFFFFFFFF
+        if self.state == 0:
+            self.state = 0x6D2B79F5
+
+    def random(self) -> float:
+        self.state = (1664525 * self.state + 1013904223) & 0xFFFFFFFF
+        return self.state / 4294967296.0
+
+    def shuffle(self, items: list[object]) -> None:
+        for index in range(len(items) - 1, 0, -1):
+            swap_index = int(self.random() * (index + 1))
+            items[index], items[swap_index] = items[swap_index], items[index]
 
 
 @dataclass(frozen=True)
@@ -613,7 +631,7 @@ def deal_color_group(
     seed: int | None = None,
     restarts: int = 500,
 ) -> tuple[list[list[Tile]], list[Tile], dict[str, object]]:
-    rng = random.Random(seed)
+    rng = SeededRng(seed)
     total_needed = players * per_player
     if total_needed > len(tiles):
         raise ValueError(f"Need {total_needed} tiles from a pool of {len(tiles)}.")
@@ -634,10 +652,13 @@ def deal_color_group(
         deck_totals = [{feature: 0.0 for feature in FEATURE_ORDER} for _ in range(players)]
         counts = [0] * players
 
-        ordered_tiles = selected[:]
-        ordered_tiles.sort(key=lambda entry: weighted_magnitude(entry) + rng.random() * 0.25, reverse=True)
+        ordered_tiles = [
+            (weighted_magnitude(entry) + rng.random() * 0.25, int(entry.tile_id), entry)
+            for entry in selected
+        ]
+        ordered_tiles.sort(key=lambda item: (-item[0], item[1]))
 
-        for entry in ordered_tiles:
+        for _, _, entry in ordered_tiles:
             candidate_scores: list[tuple[float, int]] = []
             for player_index in range(players):
                 if counts[player_index] >= capacities[player_index]:
@@ -701,7 +722,7 @@ def build_game(
     validate_mode_players(mode, players)
     setup_name = resolve_setup_name(players, setup)
     rules = SETUP_RULES[players][setup_name]
-    rng = random.Random(seed)
+    rng = SeededRng(seed)
 
     blue_pool = [entry for entry in all_tiles if entry.board_color == "blue"]
     red_pool = [entry for entry in all_tiles if entry.board_color == "red"]

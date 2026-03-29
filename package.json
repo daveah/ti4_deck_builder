@@ -1,0 +1,24 @@
+{
+  "name": "ti4-deck-builder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Balanced Twilight Imperium 4 system tile decks in Python and TypeScript.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daveah/ti4_deck_builder.git"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.10",
+    "vitest": "^3.2.4"
+  }
+}
