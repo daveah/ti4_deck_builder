@@ -6,6 +6,7 @@ const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("App root not found.");
 
 const modes: Mode[] = ["base", "pok", "thunders_edge"];
+const RANDOM_RETRY_LIMIT = 40;
 
 function getSetupOptions(players: number): string[] {
   return ["standard", "hyperlanes", "alternate", "large"].filter((setup) => {
@@ -15,6 +16,28 @@ function getSetupOptions(players: number): string[] {
       return false;
     }
   });
+}
+
+function describeSetupVariant(players: number, setup: string): string {
+  if (setup === "standard") {
+    if (players === 5) {
+      return "Standard 5-player maps use a shared extra red tile near Mecatol Rex instead of the tighter hyperlane layout.";
+    }
+    if (players === 7 || players === 8) {
+      return "Standard 7- and 8-player maps use extra shared faceup tiles in the center to complete the larger board.";
+    }
+    return "Standard uses the default official draft for this player count.";
+  }
+  if (setup === "hyperlanes") {
+    return "Hyperlanes are the compact 5-player layout. Each player drafts fewer blue tiles and no shared center tile is added.";
+  }
+  if (setup === "alternate") {
+    return "Alternate is the tighter 7- or 8-player layout with no extra shared center tiles.";
+  }
+  if (setup === "large") {
+    return "Large is the expanded 6-player map where everyone drafts a much bigger slice of the galaxy.";
+  }
+  return "This setup changes how many blue and red tiles each player drafts and whether shared center tiles are used.";
 }
 
 function renderResult(result: BuildGameResult): string {
@@ -53,7 +76,7 @@ function renderResult(result: BuildGameResult): string {
       <div class="results-topline">
         <div>
           <p class="eyebrow">Balance report</p>
-          <h2>${result.mode} • ${result.players} players • ${result.setup}</h2>
+          <h2>${result.mode} - ${result.players} players - ${result.setup}</h2>
         </div>
         <div class="balance-badges">
           <span>Score ${result.summary.score}</span>
@@ -65,6 +88,10 @@ function renderResult(result: BuildGameResult): string {
         <div class="info-panel">
           <h3>How To Use It</h3>
           <p>Deal each player their listed tiles, place any shared setup tiles near Mecatol Rex, and leave the rest out of the game.</p>
+        </div>
+        <div class="info-panel">
+          <h3>Setup Variant</h3>
+          <p>${describeSetupVariant(result.players, result.setup)}</p>
         </div>
         <div class="info-panel">
           <h3>What Gets Balanced</h3>
@@ -86,12 +113,13 @@ app.innerHTML = `
       <div class="hero-copy">
         <p class="eyebrow">Twilight Imperium 4</p>
         <h1>Build a galaxy draft that feels fair before the first ship moves.</h1>
-        <p class="lede">This web version mirrors the Python deck builder, but gives you a tabletop-friendly UI with setup guidance, a shared tile display, and a dramatic galactic briefing screen.</p>
+        <p class="lede">Generate balanced system-tile draft stacks for your table, using the correct number of blue and red tiles for each supported setup style and clear callouts for shared center tiles and leftovers.</p>
         <ol class="instruction-list">
-          <li>Pick your ruleset, player count, and setup map variant.</li>
-          <li>Use a seed when you want a deal you can reproduce later.</li>
+          <li>Pick your ruleset, player count, and setup map variant such as standard, hyperlanes, alternate, or large when that player count allows it.</li>
+          <li>Leave the seed blank for a fresh random result, or enter a seed when you want a deal you can reproduce exactly.</li>
           <li>Deal the listed stacks, place any shared tiles, and ignore the leftovers.</li>
         </ol>
+        <p class="lede">Setup variants change the shape of the final map. Some layouts use extra shared faceup tiles near Mecatol Rex, while others use tighter hyperlane or alternate maps with fewer drafted tiles per player.</p>
       </div>
       <div class="hero-art" aria-hidden="true">
         <svg viewBox="0 0 520 420">
@@ -124,7 +152,7 @@ app.innerHTML = `
         <label><span>Mode</span><select id="mode">${modes.map((mode) => `<option value="${mode}">${mode}</option>`).join("")}</select></label>
         <label><span>Players</span><input id="players" type="number" min="3" max="8" value="6" /></label>
         <label><span>Setup</span><select id="setup"></select></label>
-        <label><span>Seed</span><input id="seed" type="number" value="7" /></label>
+        <label><span>Seed</span><input id="seed" type="number" placeholder="Random" /></label>
         <label><span>Restarts</span><input id="restarts" type="number" min="10" max="5000" value="500" /></label>
         <button type="submit">Generate balanced decks</button>
       </form>
@@ -155,13 +183,36 @@ function refreshSetups(): void {
 
 function generate(): void {
   try {
-    const result = buildGame({
+    const baseOptions = {
       mode: modeSelect.value as Mode,
       players: Number.parseInt(playersInput.value, 10),
       setup: setupSelect.value,
-      seed: seedInput.value === "" ? null : Number.parseInt(seedInput.value, 10),
       restarts: Number.parseInt(restartInput.value, 10)
-    });
+    };
+    const explicitSeed = seedInput.value === "" ? null : Number.parseInt(seedInput.value, 10);
+    let result: BuildGameResult | null = null;
+    let lastError: unknown = null;
+
+    if (explicitSeed !== null) {
+      result = buildGame({ ...baseOptions, seed: explicitSeed });
+    } else {
+      for (let attempt = 0; attempt < RANDOM_RETRY_LIMIT; attempt += 1) {
+        try {
+          result = buildGame({ ...baseOptions, seed: null });
+          break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      if (!result && lastError) {
+        throw lastError;
+      }
+    }
+
+    if (!result) {
+      throw new Error("Unable to generate a balanced deck after multiple random attempts.");
+    }
+
     results.innerHTML = renderResult(result);
   } catch (error) {
     results.innerHTML = `<p class="error-card">${error instanceof Error ? error.message : String(error)}</p>`;
