@@ -50,3 +50,6 @@ pnpm-debug.log*
 Thumbs.db
 .idea/
 .vscode/
+
+# Ignore secrets
+deploy_script.ps1
