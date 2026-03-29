@@ -76,25 +76,22 @@ const TILES_BY_MODE: Record<Mode, Set<string>> = {
   thunder_edge: new Set(["base", "pok", "thunders_edge"])
 };
 
-const SETUP_RULES = {
+const BASE_SETUP_RULES = {
   3: { standard: { per_player: { blue: 6, red: 2 }, shared: { blue: 0, red: 0 } } },
   4: { standard: { per_player: { blue: 5, red: 3 }, shared: { blue: 0, red: 0 } } },
-  5: {
-    standard: { per_player: { blue: 4, red: 2 }, shared: { blue: 0, red: 1 } },
-    hyperlanes: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } }
-  },
-  6: {
-    standard: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } },
-    large: { per_player: { blue: 6, red: 3 }, shared: { blue: 0, red: 0 } }
-  },
-  7: {
-    standard: { per_player: { blue: 4, red: 2 }, shared: { blue: 3, red: 2 } },
-    alternate: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } }
-  },
-  8: {
-    standard: { per_player: { blue: 4, red: 2 }, shared: { blue: 2, red: 2 } },
-    alternate: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } }
-  }
+  5: { standard: { per_player: { blue: 4, red: 2 }, shared: { blue: 0, red: 1 } } },
+  6: { standard: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } }
+} as const;
+
+const EXPANSION_SETUP_RULES = {
+  3: { standard: { per_player: { blue: 6, red: 2 }, shared: { blue: 0, red: 0 } } },
+  4: { standard: { per_player: { blue: 5, red: 3 }, shared: { blue: 0, red: 0 } },
+    hyperlanes: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } },
+  5: { standard: { per_player: { blue: 4, red: 2 }, shared: { blue: 0, red: 1 } },
+    hyperlanes: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } },
+  6: { standard: { per_player: { blue: 3, red: 2 }, shared: { blue: 0, red: 0 } } },
+  7: { hyperlanes: { per_player: { blue: 4, red: 2 }, shared: { blue: 3, red: 2 } } },
+  8: { standard: { per_player: { blue: 4, red: 2 }, shared: { blue: 2, red: 2 } } }
 } as const;
 
 export class SeededRng {
@@ -264,15 +261,25 @@ function summarizeAssignment(decks: Tile[][], capacities: number[]) {
   };
 }
 
-function validateModePlayers(mode: Mode, players: number): void {
-  if (!(players in SETUP_RULES)) throw new Error("Supported player counts are 3 through 8.");
-  if (mode === "base" && players > 6) throw new Error("Base game mode supports 3 through 6 players.");
+function setupRulesForMode(mode: Mode) {
+  return mode === "base" ? BASE_SETUP_RULES : EXPANSION_SETUP_RULES;
 }
 
-export function resolveSetupName(players: number, setup?: string | null): string {
-  const options = SETUP_RULES[players as keyof typeof SETUP_RULES];
-  if (!options) throw new Error("Supported player counts are 3 through 8.");
-  if (!setup) return players === 5 ? "hyperlanes" : "standard";
+export function getSetupOptions(mode: Mode, players: number): string[] {
+  const options = setupRulesForMode(mode)[players as keyof ReturnType<typeof setupRulesForMode>];
+  return options ? Object.keys(options) : [];
+}
+
+function validateModePlayers(mode: Mode, players: number): void {
+  if (!(players in setupRulesForMode(mode))) {
+    throw new Error(mode === "base" ? "Base game mode supports 3 through 6 players." : "This mode supports 3 through 8 players.");
+  }
+}
+
+export function resolveSetupName(mode: Mode, players: number, setup?: string | null): string {
+  const options = setupRulesForMode(mode)[players as keyof ReturnType<typeof setupRulesForMode>];
+  if (!options) throw new Error(mode === "base" ? "Base game mode supports 3 through 6 players." : "This mode supports 3 through 8 players.");
+  if (!setup) return Object.keys(options)[0];
   if (!(setup in options)) throw new Error(`Unsupported setup '${setup}' for ${players} players.`);
   return setup;
 }
@@ -343,8 +350,9 @@ export function buildGame(options: { mode: Mode; players: number; setup?: string
   const seed = options.seed ?? null;
   const restarts = options.restarts ?? 500;
   validateModePlayers(mode, players);
-  const setupName = resolveSetupName(players, options.setup);
-  const rules = SETUP_RULES[players as keyof typeof SETUP_RULES][setupName as keyof (typeof SETUP_RULES)[keyof typeof SETUP_RULES]];
+  const setupName = resolveSetupName(mode, players, options.setup);
+  const rulesByMode = setupRulesForMode(mode);
+  const rules = rulesByMode[players as keyof typeof rulesByMode][setupName as keyof (typeof rulesByMode)[keyof typeof rulesByMode]];
   const pool = poolForMode(mode);
   const bluePool = pool.filter((tile) => tile.board_color === "blue");
   const redPool = pool.filter((tile) => tile.board_color === "red");

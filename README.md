@@ -58,6 +58,64 @@ To build the production version:
 npm run build
 ```
 
+### JSON board layouts
+
+The web UI board preview is driven by [src/layouts.json](C:\Users\dave\dev\ti4_deck_builder\src\layouts.json). Each entry is a board layout keyed by:
+
+- `base:3:standard`
+- `pok:5:hyperlanes`
+- `thunders_edge:8:hyperlanes`
+
+Each layout contains a `tiles` array. Every tile object supports:
+
+- `q`: axial hex column
+- `r`: axial hex row
+- `kind`: `red`, `green`, `hyperlane`, `blue`, or one of `blue1`, `blue2`, `blue3`, `blue4`
+- `label`: optional text such as `MR`, `H1`, or `S1`
+- `hyperlaneId`: optional hyperlane tile id such as `83A`
+- `rotation`: optional clockwise rotation in 60-degree steps, from `0` to `5`
+- `connections`: optional hyperlane edge pairs such as `[[0,2],[3,5]]`
+
+Blue ring shades:
+
+- `blue1`: lightest blue
+- `blue2`: medium-light blue
+- `blue3`: medium-dark blue
+- `blue4`: darkest blue
+- `blue`: legacy/default mid-blue alias
+
+Example:
+
+```json
+{
+  "key": "pok:5:hyperlanes",
+  "title": "PoK 5-player hyperlanes",
+  "tiles": [
+    { "q": 0, "r": 0, "kind": "red", "label": "MR" },
+    { "q": -3, "r": 1, "kind": "green", "label": "H1" },
+    { "q": -1, "r": 4, "kind": "hyperlane", "hyperlaneId": "83A", "rotation": 0, "connections": [[0,2],[3,5]] }
+  ]
+}
+```
+
+Axial coordinate guide used by the renderer:
+
+```text
+        (0,-1)   (1,-1)
+    (-1,0)   (0,0)   (1,0)
+        (-1,1)   (0,1)
+```
+
+Hyperlane edge numbering:
+
+```text
+          1   0
+        2   •   5
+          3   4
+```
+
+That means `connections: [[0,3]]` draws a line from the upper-right edge to the lower-left edge of the hex. If you also set `rotation`, the whole hyperlane glyph rotates after those edge numbers are interpreted.
+
 ## WebDAV Deploy
 
 The project includes a WebDAV deployment tool for the built TypeScript app:

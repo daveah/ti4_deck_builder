@@ -43,6 +43,43 @@ button, input, select { font: inherit; }
 .deck-form button {
   border: 0; border-radius: 16px; padding: 0.9rem 1rem; font-weight: 700; color: #09111d; background: linear-gradient(135deg, var(--gold), #ffdca0); cursor: pointer;
 }
+.preview-card {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.08);
+}
+.preview-copy h3 { margin: 0; font-family: "Palatino Linotype", "Book Antiqua", serif; }
+.preview-copy p { color: var(--muted); }
+.preview-copy code, .preview-legend code { font-family: Consolas, "Courier New", monospace; }
+.preview-tags, .preview-legend { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.preview-tags span, .preview-legend span {
+  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.65rem; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+}
+.board-preview {
+  width: 100%;
+  min-height: 280px;
+  border-radius: 24px;
+}
+.legend-swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 0.2rem;
+  display: inline-block;
+  border: 1px solid rgba(255,255,255,.16);
+}
+.legend-swatch.red { background: #ffcf70; }
+.legend-swatch.blue { background: #88b6ff; }
+.legend-swatch.blue1 { background: #cfe1ff; }
+.legend-swatch.blue2 { background: #88b6ff; }
+.legend-swatch.blue3 { background: #4e86df; }
+.legend-swatch.blue4 { background: #204b93; }
+.legend-swatch.green { background: #59c17d; }
+.legend-swatch.hyperlane { background: #2d3b59; }
 .results-shell { padding: 1.5rem; }
 .results-topline, .info-grid, .detail-panels { display: grid; gap: 1rem; }
 .results-topline { grid-template-columns: 1fr auto; align-items: start; }
@@ -67,5 +104,5 @@ button, input, select { font: inherit; }
 .error-card { padding: 1rem 1.2rem; color: #ffe4e1; }
 
 @media (max-width: 920px) {
-  .hero, .results-topline, .info-grid, .detail-panels, .deck-form { grid-template-columns: 1fr; }
+  .hero, .results-topline, .info-grid, .detail-panels, .deck-form, .preview-card { grid-template-columns: 1fr; }
 }

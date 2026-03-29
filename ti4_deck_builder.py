@@ -497,7 +497,7 @@ TILES_BY_MODE = {
     "thunder_edge": {"base", "pok", "thunders_edge"},
 }
 
-SETUP_RULES = {
+BASE_SETUP_RULES = {
     3: {
         "standard": {"per_player": {"blue": 6, "red": 2}, "shared": {"blue": 0, "red": 0}},
     },
@@ -506,19 +506,32 @@ SETUP_RULES = {
     },
     5: {
         "standard": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 0, "red": 1}},
+    },
+    6: {
+        "standard": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
+    },
+}
+
+EXPANSION_SETUP_RULES = {
+    3: {
+        "standard": {"per_player": {"blue": 6, "red": 2}, "shared": {"blue": 0, "red": 0}},
+    },
+    4: {
+        "standard": {"per_player": {"blue": 5, "red": 3}, "shared": {"blue": 0, "red": 0}},
+        "hyperlanes": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
+    },
+    5: {
+        "standard": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 0, "red": 1}},
         "hyperlanes": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
     },
     6: {
         "standard": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
-        "large": {"per_player": {"blue": 6, "red": 3}, "shared": {"blue": 0, "red": 0}},
     },
     7: {
-        "standard": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 3, "red": 2}},
-        "alternate": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
+        "hyperlanes": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 3, "red": 2}},
     },
     8: {
         "standard": {"per_player": {"blue": 4, "red": 2}, "shared": {"blue": 2, "red": 2}},
-        "alternate": {"per_player": {"blue": 3, "red": 2}, "shared": {"blue": 0, "red": 0}},
     },
 }
 
@@ -694,17 +707,21 @@ def deal_color_group(
     return best_assignment, leftovers, summary
 
 
+def setup_rules_for_mode(mode: str) -> dict[int, dict[str, dict[str, dict[str, int]]]]:
+    return BASE_SETUP_RULES if mode == "base" else EXPANSION_SETUP_RULES
+
+
 def validate_mode_players(mode: str, players: int) -> None:
-    if players not in SETUP_RULES:
-        raise ValueError("Supported player counts are 3 through 8.")
-    if mode == "base" and players > 6:
-        raise ValueError("Base game mode supports 3 through 6 players.")
+    if players not in setup_rules_for_mode(mode):
+        if mode == "base":
+            raise ValueError("Base game mode supports 3 through 6 players.")
+        raise ValueError("This mode supports 3 through 8 players.")
 
 
-def resolve_setup_name(players: int, setup: str | None) -> str:
-    options = SETUP_RULES[players]
+def resolve_setup_name(mode: str, players: int, setup: str | None) -> str:
+    options = setup_rules_for_mode(mode)[players]
     if setup is None:
-        return "hyperlanes" if players == 5 else "standard"
+        return next(iter(options))
     normalized = setup.lower()
     if normalized not in options:
         raise ValueError(f"Unsupported setup '{setup}' for {players} players. Choose from: {', '.join(sorted(options))}.")
@@ -720,8 +737,8 @@ def build_game(
     restarts: int = 500,
 ) -> dict[str, object]:
     validate_mode_players(mode, players)
-    setup_name = resolve_setup_name(players, setup)
-    rules = SETUP_RULES[players][setup_name]
+    setup_name = resolve_setup_name(mode, players, setup)
+    rules = setup_rules_for_mode(mode)[players][setup_name]
     rng = SeededRng(seed)
 
     blue_pool = [entry for entry in all_tiles if entry.board_color == "blue"]
