@@ -12,12 +12,8 @@
         "name": "Wellon",
         "resources": 1,
         "influence": 2,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "cybernetic"
-        ],
+        "traits": ["industrial"],
+        "techs": ["cybernetic"],
         "legendary": false,
         "station": false
       }
@@ -36,9 +32,7 @@
         "name": "Vefut II",
         "resources": 2,
         "influence": 2,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -58,12 +52,8 @@
         "name": "Thibah",
         "resources": 1,
         "influence": 1,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "propulsion"
-        ],
+        "traits": ["industrial"],
+        "techs": ["propulsion"],
         "legendary": false,
         "station": false
       }
@@ -82,12 +72,8 @@
         "name": "Tar'Mann",
         "resources": 1,
         "influence": 1,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "biotic"
-        ],
+        "traits": ["industrial"],
+        "techs": ["biotic"],
         "legendary": false,
         "station": false
       }
@@ -106,9 +92,7 @@
         "name": "Saudor",
         "resources": 2,
         "influence": 2,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -128,12 +112,8 @@
         "name": "Mehar Xull",
         "resources": 1,
         "influence": 3,
-        "traits": [
-          "hazardous"
-        ],
-        "techs": [
-          "warfare"
-        ],
+        "traits": ["hazardous"],
+        "techs": ["warfare"],
         "legendary": false,
         "station": false
       }
@@ -144,9 +124,7 @@
     "name": "Quann",
     "expansion": "base",
     "board_color": "blue",
-    "wormholes": [
-      "beta"
-    ],
+    "wormholes": ["beta"],
     "anomalies": [],
     "special": false,
     "planets": [
@@ -154,9 +132,7 @@
         "name": "Quann",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -168,9 +144,7 @@
     "name": "Lodor",
     "expansion": "base",
     "board_color": "blue",
-    "wormholes": [
-      "alpha"
-    ],
+    "wormholes": ["alpha"],
     "anomalies": [],
     "special": false,
     "planets": [
@@ -178,9 +152,7 @@
         "name": "Lodor",
         "resources": 3,
         "influence": 1,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -200,12 +172,8 @@
         "name": "New Albion",
         "resources": 1,
         "influence": 1,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "biotic"
-        ],
+        "traits": ["industrial"],
+        "techs": ["biotic"],
         "legendary": false,
         "station": false
       },
@@ -213,9 +181,7 @@
         "name": "Starpoint",
         "resources": 3,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -235,9 +201,7 @@
         "name": "Tequ'ran",
         "resources": 2,
         "influence": 0,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -246,9 +210,7 @@
         "name": "Torkan",
         "resources": 0,
         "influence": 3,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -268,9 +230,7 @@
         "name": "Qucen'n",
         "resources": 1,
         "influence": 2,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -279,9 +239,7 @@
         "name": "Rarron",
         "resources": 0,
         "influence": 3,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -301,9 +259,7 @@
         "name": "Mellon",
         "resources": 0,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -312,9 +268,7 @@
         "name": "Zohbat",
         "resources": 3,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -334,12 +288,8 @@
         "name": "Lazar",
         "resources": 1,
         "influence": 0,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "cybernetic"
-        ],
+        "traits": ["industrial"],
+        "techs": ["cybernetic"],
         "legendary": false,
         "station": false
       },
@@ -347,9 +297,7 @@
         "name": "Sakulag",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -369,9 +317,7 @@
         "name": "Dal Bootha",
         "resources": 0,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -380,9 +326,7 @@
         "name": "Xxehan",
         "resources": 1,
         "influence": 1,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -402,9 +346,7 @@
         "name": "Coorneeq",
         "resources": 1,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -413,9 +355,7 @@
         "name": "Resculon",
         "resources": 2,
         "influence": 0,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -435,9 +375,7 @@
         "name": "Centauri",
         "resources": 1,
         "influence": 3,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -446,12 +384,8 @@
         "name": "Gral",
         "resources": 1,
         "influence": 1,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "propulsion"
-        ],
+        "traits": ["industrial"],
+        "techs": ["propulsion"],
         "legendary": false,
         "station": false
       }
@@ -470,9 +404,7 @@
         "name": "Bereg",
         "resources": 3,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -481,9 +413,7 @@
         "name": "Lirta IV",
         "resources": 2,
         "influence": 3,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -503,9 +433,7 @@
         "name": "Arnor",
         "resources": 1,
         "influence": 2,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -514,9 +442,7 @@
         "name": "Lor",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -536,9 +462,7 @@
         "name": "Arinam",
         "resources": 1,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -547,12 +471,8 @@
         "name": "Meer",
         "resources": 0,
         "influence": 4,
-        "traits": [
-          "hazardous"
-        ],
-        "techs": [
-          "warfare"
-        ],
+        "traits": ["hazardous"],
+        "techs": ["warfare"],
         "legendary": false,
         "station": false
       }
@@ -571,9 +491,7 @@
         "name": "Abyz",
         "resources": 3,
         "influence": 0,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -582,9 +500,7 @@
         "name": "Fria",
         "resources": 2,
         "influence": 0,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -596,9 +512,7 @@
     "name": "Alpha Wormhole",
     "expansion": "base",
     "board_color": "red",
-    "wormholes": [
-      "alpha"
-    ],
+    "wormholes": ["alpha"],
     "anomalies": [],
     "special": false,
     "planets": []
@@ -608,9 +522,7 @@
     "name": "Beta Wormhole",
     "expansion": "base",
     "board_color": "red",
-    "wormholes": [
-      "beta"
-    ],
+    "wormholes": ["beta"],
     "anomalies": [],
     "special": false,
     "planets": []
@@ -621,9 +533,7 @@
     "expansion": "base",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "gravity_rift"
-    ],
+    "anomalies": ["gravity_rift"],
     "special": false,
     "planets": []
   },
@@ -633,9 +543,7 @@
     "expansion": "base",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "nebula"
-    ],
+    "anomalies": ["nebula"],
     "special": false,
     "planets": []
   },
@@ -645,9 +553,7 @@
     "expansion": "base",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "supernova"
-    ],
+    "anomalies": ["supernova"],
     "special": false,
     "planets": []
   },
@@ -657,9 +563,7 @@
     "expansion": "base",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "asteroid_field"
-    ],
+    "anomalies": ["asteroid_field"],
     "special": false,
     "planets": []
   },
@@ -669,9 +573,7 @@
     "expansion": "base",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "asteroid_field"
-    ],
+    "anomalies": ["asteroid_field"],
     "special": false,
     "planets": []
   },
@@ -738,12 +640,8 @@
         "name": "Archon Vail",
         "resources": 1,
         "influence": 3,
-        "traits": [
-          "hazardous"
-        ],
-        "techs": [
-          "propulsion"
-        ],
+        "traits": ["hazardous"],
+        "techs": ["propulsion"],
         "legendary": false,
         "station": false
       }
@@ -762,9 +660,7 @@
         "name": "Perimeter",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -784,12 +680,8 @@
         "name": "Ang",
         "resources": 2,
         "influence": 0,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "warfare"
-        ],
+        "traits": ["industrial"],
+        "techs": ["warfare"],
         "legendary": false,
         "station": false
       }
@@ -808,12 +700,8 @@
         "name": "Sem-Lore",
         "resources": 3,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
-        "techs": [
-          "cybernetic"
-        ],
+        "traits": ["cultural"],
+        "techs": ["cybernetic"],
         "legendary": false,
         "station": false
       }
@@ -832,12 +720,8 @@
         "name": "Vorhal",
         "resources": 0,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
-        "techs": [
-          "biotic"
-        ],
+        "traits": ["cultural"],
+        "techs": ["biotic"],
         "legendary": false,
         "station": false
       }
@@ -848,9 +732,7 @@
     "name": "Atlas",
     "expansion": "pok",
     "board_color": "blue",
-    "wormholes": [
-      "beta"
-    ],
+    "wormholes": ["beta"],
     "anomalies": [],
     "special": false,
     "planets": [
@@ -858,9 +740,7 @@
         "name": "Atlas",
         "resources": 3,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -880,9 +760,7 @@
         "name": "Primor",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": true,
         "station": false
@@ -902,9 +780,7 @@
         "name": "Hope's End",
         "resources": 3,
         "influence": 0,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": true,
         "station": false
@@ -917,18 +793,14 @@
     "expansion": "pok",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "gravity_rift"
-    ],
+    "anomalies": ["gravity_rift"],
     "special": false,
     "planets": [
       {
         "name": "Cormund",
         "resources": 2,
         "influence": 0,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -941,18 +813,14 @@
     "expansion": "pok",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "nebula"
-    ],
+    "anomalies": ["nebula"],
     "special": false,
     "planets": [
       {
         "name": "Everra",
         "resources": 3,
         "influence": 1,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -972,9 +840,7 @@
         "name": "Accoen",
         "resources": 2,
         "influence": 3,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -983,9 +849,7 @@
         "name": "Jeol Ir",
         "resources": 2,
         "influence": 3,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1005,9 +869,7 @@
         "name": "Kraag",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1016,9 +878,7 @@
         "name": "Siig",
         "resources": 0,
         "influence": 2,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1038,9 +898,7 @@
         "name": "Bakal",
         "resources": 3,
         "influence": 2,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1049,9 +907,7 @@
         "name": "Alio Prima",
         "resources": 1,
         "influence": 1,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1071,9 +927,7 @@
         "name": "Lisis",
         "resources": 2,
         "influence": 2,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1082,12 +936,8 @@
         "name": "Velnor",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "warfare"
-        ],
+        "traits": ["industrial"],
+        "techs": ["warfare"],
         "legendary": false,
         "station": false
       }
@@ -1106,12 +956,8 @@
         "name": "Cealdri",
         "resources": 0,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
-        "techs": [
-          "cybernetic"
-        ],
+        "traits": ["cultural"],
+        "techs": ["cybernetic"],
         "legendary": false,
         "station": false
       },
@@ -1119,9 +965,7 @@
         "name": "Xanhact",
         "resources": 0,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1141,9 +985,7 @@
         "name": "Vega Major",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1152,12 +994,8 @@
         "name": "Vega Minor",
         "resources": 1,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
-        "techs": [
-          "propulsion"
-        ],
+        "traits": ["cultural"],
+        "techs": ["propulsion"],
         "legendary": false,
         "station": false
       }
@@ -1176,9 +1014,7 @@
         "name": "Abaddon",
         "resources": 1,
         "influence": 0,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1187,9 +1023,7 @@
         "name": "Loki",
         "resources": 1,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1198,9 +1032,7 @@
         "name": "Ashtroth",
         "resources": 2,
         "influence": 0,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1220,9 +1052,7 @@
         "name": "Rigel I",
         "resources": 0,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1231,9 +1061,7 @@
         "name": "Rigel II",
         "resources": 1,
         "influence": 2,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1242,12 +1070,8 @@
         "name": "Rigel III",
         "resources": 1,
         "influence": 1,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "biotic"
-        ],
+        "traits": ["industrial"],
+        "techs": ["biotic"],
         "legendary": false,
         "station": false
       }
@@ -1278,12 +1102,8 @@
     "name": "Asteroid Field / Alpha Wormhole",
     "expansion": "pok",
     "board_color": "red",
-    "wormholes": [
-      "alpha"
-    ],
-    "anomalies": [
-      "asteroid_field"
-    ],
+    "wormholes": ["alpha"],
+    "anomalies": ["asteroid_field"],
     "special": false,
     "planets": []
   },
@@ -1293,9 +1113,7 @@
     "expansion": "pok",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "supernova"
-    ],
+    "anomalies": ["supernova"],
     "special": false,
     "planets": []
   },
@@ -1312,12 +1130,8 @@
         "name": "Faunus",
         "resources": 1,
         "influence": 3,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "biotic"
-        ],
+        "traits": ["industrial"],
+        "techs": ["biotic"],
         "legendary": true,
         "station": false
       }
@@ -1336,9 +1150,7 @@
         "name": "Garbozia",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": true,
         "station": false
@@ -1358,9 +1170,7 @@
         "name": "Emelpar",
         "resources": 0,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": true,
         "station": false
@@ -1380,12 +1190,8 @@
         "name": "Tempesta",
         "resources": 1,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
-        "techs": [
-          "propulsion"
-        ],
+        "traits": ["hazardous"],
+        "techs": ["propulsion"],
         "legendary": true,
         "station": false
       }
@@ -1404,14 +1210,8 @@
         "name": "Olergodt",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "cultural",
-          "hazardous"
-        ],
-        "techs": [
-          "cybernetic",
-          "warfare"
-        ],
+        "traits": ["cultural", "hazardous"],
+        "techs": ["cybernetic", "warfare"],
         "legendary": false,
         "station": false
       }
@@ -1422,9 +1222,7 @@
     "name": "Andeara",
     "expansion": "thunders_edge",
     "board_color": "blue",
-    "wormholes": [
-      "alpha"
-    ],
+    "wormholes": ["alpha"],
     "anomalies": [],
     "special": false,
     "planets": [
@@ -1432,12 +1230,8 @@
         "name": "Andeara",
         "resources": 1,
         "influence": 1,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "propulsion"
-        ],
+        "traits": ["industrial"],
+        "techs": ["propulsion"],
         "legendary": false,
         "station": false
       }
@@ -1456,10 +1250,7 @@
         "name": "Vira-Pics III",
         "resources": 2,
         "influence": 3,
-        "traits": [
-          "cultural",
-          "hazardous"
-        ],
+        "traits": ["cultural", "hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1479,10 +1270,7 @@
         "name": "Lesab",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "industrial",
-          "hazardous"
-        ],
+        "traits": ["industrial", "hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1502,12 +1290,8 @@
         "name": "New Terra",
         "resources": 1,
         "influence": 1,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "biotic"
-        ],
+        "traits": ["industrial"],
+        "techs": ["biotic"],
         "legendary": false,
         "station": false
       },
@@ -1515,13 +1299,8 @@
         "name": "Tinnes",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "industrial",
-          "hazardous"
-        ],
-        "techs": [
-          "biotic"
-        ],
+        "traits": ["industrial", "hazardous"],
+        "techs": ["biotic"],
         "legendary": false,
         "station": false
       }
@@ -1540,9 +1319,7 @@
         "name": "Cresius",
         "resources": 0,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1551,10 +1328,7 @@
         "name": "Lazul Rex",
         "resources": 2,
         "influence": 2,
-        "traits": [
-          "cultural",
-          "industrial"
-        ],
+        "traits": ["cultural", "industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1574,13 +1348,8 @@
         "name": "Tiamat",
         "resources": 2,
         "influence": 1,
-        "traits": [
-          "cultural"
-        ],
-        "techs": [
-          "cybernetic",
-          "cybernetic"
-        ],
+        "traits": ["cultural"],
+        "techs": ["cybernetic", "cybernetic"],
         "legendary": false,
         "station": false
       },
@@ -1588,9 +1357,7 @@
         "name": "Hercalor",
         "resources": 1,
         "influence": 0,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1610,9 +1377,7 @@
         "name": "Kostboth",
         "resources": 0,
         "influence": 1,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1621,9 +1386,7 @@
         "name": "Capha",
         "resources": 3,
         "influence": 0,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1643,9 +1406,7 @@
         "name": "Bellatrix",
         "resources": 1,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1674,9 +1435,7 @@
         "name": "Horizon",
         "resources": 1,
         "influence": 2,
-        "traits": [
-          "cultural"
-        ],
+        "traits": ["cultural"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1685,9 +1444,7 @@
         "name": "El'Nath",
         "resources": 2,
         "influence": 0,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1696,9 +1453,7 @@
         "name": "Luthien VI",
         "resources": 3,
         "influence": 1,
-        "traits": [
-          "hazardous"
-        ],
+        "traits": ["hazardous"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1718,10 +1473,7 @@
         "name": "Tarana",
         "resources": 1,
         "influence": 2,
-        "traits": [
-          "cultural",
-          "industrial"
-        ],
+        "traits": ["cultural", "industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1742,12 +1494,8 @@
     "name": "Gravity Rift / Beta Wormhole",
     "expansion": "thunders_edge",
     "board_color": "red",
-    "wormholes": [
-      "beta"
-    ],
-    "anomalies": [
-      "gravity_rift"
-    ],
+    "wormholes": ["beta"],
+    "anomalies": ["gravity_rift"],
     "special": false,
     "planets": []
   },
@@ -1757,9 +1505,7 @@
     "expansion": "thunders_edge",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "entropic_scar"
-    ],
+    "anomalies": ["entropic_scar"],
     "special": false,
     "planets": []
   },
@@ -1769,21 +1515,15 @@
     "expansion": "thunders_edge",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "asteroid_field"
-    ],
+    "anomalies": ["asteroid_field"],
     "special": false,
     "planets": [
       {
         "name": "Industrex",
         "resources": 2,
         "influence": 0,
-        "traits": [
-          "industrial"
-        ],
-        "techs": [
-          "warfare"
-        ],
+        "traits": ["industrial"],
+        "techs": ["warfare"],
         "legendary": true,
         "station": false
       }
@@ -1795,18 +1535,14 @@
     "expansion": "thunders_edge",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "entropic_scar"
-    ],
+    "anomalies": ["entropic_scar"],
     "special": false,
     "planets": [
       {
         "name": "Lemox",
         "resources": 0,
         "influence": 3,
-        "traits": [
-          "industrial"
-        ],
+        "traits": ["industrial"],
         "techs": [],
         "legendary": false,
         "station": false
@@ -1819,10 +1555,7 @@
     "expansion": "thunders_edge",
     "board_color": "red",
     "wormholes": [],
-    "anomalies": [
-      "gravity_rift",
-      "asteroid_field"
-    ],
+    "anomalies": ["gravity_rift", "asteroid_field"],
     "special": false,
     "planets": [
       {

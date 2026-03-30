@@ -1,5 +1,11 @@
 import "./styles.css";
-import { buildGame, getSetupOptions, resolveSetupName, type BuildGameResult, type Mode } from "./deckBuilder";
+import {
+  buildGame,
+  getSetupOptions,
+  resolveSetupName,
+  type BuildGameResult,
+  type Mode,
+} from "./deckBuilder";
 import layoutsJson from "./layouts.json";
 
 const app = document.querySelector<HTMLDivElement>("#app");
@@ -10,7 +16,11 @@ const modes: Mode[] = ["base", "pok", "thunders_edge"];
 const RANDOM_RETRY_LIMIT = 40;
 const SQRT3 = Math.sqrt(3);
 
-function describeSetupVariant(mode: Mode, players: number, setup: string): string {
+function describeSetupVariant(
+  mode: Mode,
+  players: number,
+  setup: string,
+): string {
   if (setup === "standard") {
     if (mode === "base" && players === 5) {
       return "Base-game 5-player setup uses one shared faceup red tile adjacent to Mecatol Rex.";
@@ -18,15 +28,26 @@ function describeSetupVariant(mode: Mode, players: number, setup: string): strin
     return "Standard uses the official default board setup for this player count.";
   }
   if (setup === "hyperlanes") {
-    if (players === 4) return "The Thunder's Edge 4-player expansion setup uses two hyperlane fans.";
-    if (players === 5) return "The official 5-player expansion setup uses a hyperlane fan below the board and no shared center tiles.";
-    if (players === 7) return "The official 7-player expansion setup uses a hyperlane fan and no shared center tiles.";
+    if (players === 4)
+      return "The Thunder's Edge 4-player expansion setup uses two hyperlane fans.";
+    if (players === 5)
+      return "The official 5-player expansion setup uses a hyperlane fan below the board and no shared center tiles.";
+    if (players === 7)
+      return "The official 7-player expansion setup uses a hyperlane fan and no shared center tiles.";
     return "Hyperlane layouts use the official expansion board templates for larger player counts.";
   }
   return "This setup changes how many blue and red tiles each player drafts and whether shared center tiles are used.";
 }
 
-type BoardTileKind = "blue" | "blue1" | "blue2" | "blue3" | "blue4" | "green" | "red" | "hyperlane";
+type BoardTileKind =
+  | "blue"
+  | "blue1"
+  | "blue2"
+  | "blue3"
+  | "blue4"
+  | "green"
+  | "red"
+  | "hyperlane";
 
 type BoardTile = {
   q: number;
@@ -52,46 +73,62 @@ type LayoutFile = {
 
 const layoutFile = layoutsJson as LayoutFile;
 
-function getLayoutDefinition(mode: Mode, players: number, setup: string): LayoutDefinition | null {
+function getLayoutDefinition(
+  mode: Mode,
+  players: number,
+  setup: string,
+): LayoutDefinition | null {
   const key = `${mode}:${players}:${setup}`;
-  const index = new Map(layoutFile.layouts.map((layout) => [layout.key, layout]));
+  const index = new Map(
+    layoutFile.layouts.map((layout) => [layout.key, layout]),
+  );
   const visited = new Set<string>();
   let layout = index.get(key) ?? null;
   while (layout?.ref) {
     if (visited.has(layout.key)) {
-      throw new Error(`Circular layout reference detected for '${layout.key}'.`);
+      throw new Error(
+        `Circular layout reference detected for '${layout.key}'.`,
+      );
     }
     visited.add(layout.key);
     const target = index.get(layout.ref);
     if (!target) {
-      throw new Error(`Layout '${layout.key}' references missing key '${layout.ref}'.`);
+      throw new Error(
+        `Layout '${layout.key}' references missing key '${layout.ref}'.`,
+      );
     }
     layout = {
       ...target,
       key: layout.key,
       title: layout.title ?? target.title,
-      notes: layout.notes ?? target.notes
+      notes: layout.notes ?? target.notes,
     };
   }
   return layout;
 }
 
-function rotationTransform(cx: number, cy: number, rotation: number | undefined): string {
-  const normalized = ((rotation ?? 0) % 6 + 6) % 6;
-  return normalized === 0 ? "" : ` transform="rotate(${normalized * 60} ${cx} ${cy})"`;
+function rotationTransform(
+  cx: number,
+  cy: number,
+  rotation: number | undefined,
+): string {
+  const normalized = (((rotation ?? 0) % 6) + 6) % 6;
+  return normalized === 0
+    ? ""
+    : ` transform="rotate(${normalized * 60} ${cx} ${cy})"`;
 }
 
 function renderHyperlaneGlyph(tile: BoardTile, cx: number, cy: number): string {
   const pairs = tile.connections ?? [
     [0, 3],
-    [1, 4]
+    [1, 4],
   ];
   const edgeRadius = 22;
   const edgePoint = (edge: number) => {
     const theta = (Math.PI / 180) * (60 * edge);
     return {
       x: cx + edgeRadius * Math.cos(theta),
-      y: cy + edgeRadius * Math.sin(theta)
+      y: cy + edgeRadius * Math.sin(theta),
     };
   };
 
@@ -103,11 +140,17 @@ function renderHyperlaneGlyph(tile: BoardTile, cx: number, cy: number): string {
     })
     .join("");
 
-  const label = tile.hyperlaneId ? `<text x="${cx}" y="${cy + 18}" text-anchor="middle" font-size="8" font-weight="700" fill="#f5efe0">${tile.hyperlaneId}</text>` : "";
+  const label = tile.hyperlaneId
+    ? `<text x="${cx}" y="${cy + 18}" text-anchor="middle" font-size="8" font-weight="700" fill="#f5efe0">${tile.hyperlaneId}</text>`
+    : "";
   return `<g${rotationTransform(cx, cy, tile.rotation)}>${paths}${label}</g>`;
 }
 
-function renderBoardPreview(mode: Mode, players: number, setup: string): string {
+function renderBoardPreview(
+  mode: Mode,
+  players: number,
+  setup: string,
+): string {
   const layout = getLayoutDefinition(mode, players, setup);
   const captions = [`${mode} mode`, `${players} players`, `${setup} layout`];
   if (!layout) {
@@ -152,7 +195,7 @@ function renderBoardPreview(mode: Mode, players: number, setup: string): string 
     blue3: "#4e86df",
     blue4: "#204b93",
     green: "#59c17d",
-    hyperlane: "#2d3b59"
+    hyperlane: "#2d3b59",
   };
 
   return `
@@ -176,7 +219,9 @@ function renderBoardPreview(mode: Mode, players: number, setup: string): string 
             const cx = tile.x - minX + margin;
             const cy = tile.y - minY + margin;
             const textColor = tile.kind === "red" ? "#09111d" : "#f5efe0";
-            const primaryLabel = tile.label ? `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="10" font-weight="700" fill="${textColor}">${tile.label}</text>` : "";
+            const primaryLabel = tile.label
+              ? `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="10" font-weight="700" fill="${textColor}">${tile.label}</text>`
+              : "";
             const secondaryLabel =
               tile.kind === "hyperlane" && tile.label
                 ? `<text x="${cx}" y="${cy - 8}" text-anchor="middle" font-size="7" font-weight="700" fill="#f5efe0">${tile.label}</text>`
@@ -198,7 +243,9 @@ function renderBoardPreview(mode: Mode, players: number, setup: string): string 
 function renderResult(result: BuildGameResult): string {
   const players = result.summary.players
     .map((player) => {
-      const tiles = player.tiles.map((tile) => `<li><strong>${tile.id}</strong> ${tile.name}</li>`).join("");
+      const tiles = player.tiles
+        .map((tile) => `<li><strong>${tile.id}</strong> ${tile.name}</li>`)
+        .join("");
       return `
         <article class="player-card">
           <header>
@@ -224,15 +271,15 @@ function renderResult(result: BuildGameResult): string {
         id: tile.id,
         name: tile.name,
         owner: player.player,
-        ownerClass: `owner-${player.player.toLowerCase().replace(/\s+/g, "-")}`
-      }))
+        ownerClass: `owner-${player.player.toLowerCase().replace(/\s+/g, "-")}`,
+      })),
     ),
     ...result.summary.shared_tiles.map((tile) => ({
       id: tile.id,
       name: tile.name,
       owner: "Shared",
-      ownerClass: "owner-shared"
-    }))
+      ownerClass: "owner-shared",
+    })),
   ]
     .sort((left, right) => Number(left.id) - Number(right.id))
     .map(
@@ -242,16 +289,20 @@ function renderResult(result: BuildGameResult): string {
           <td>${entry.owner}</td>
           <td>${entry.name}</td>
         </tr>
-      `
+      `,
     )
     .join("");
 
   const shared = result.summary.shared_tiles.length
-    ? result.summary.shared_tiles.map((tile) => `<strong>${tile.id}</strong> ${tile.name}`).join(", ")
+    ? result.summary.shared_tiles
+        .map((tile) => `<strong>${tile.id}</strong> ${tile.name}`)
+        .join(", ")
     : "None for this setup.";
 
   const unused = result.summary.unused_tiles.length
-    ? result.summary.unused_tiles.map((tile) => `<strong>${tile.id}</strong> ${tile.name}`).join(", ")
+    ? result.summary.unused_tiles
+        .map((tile) => `<strong>${tile.id}</strong> ${tile.name}`)
+        .join(", ")
     : "None.";
 
   return `
@@ -314,8 +365,9 @@ function renderResult(result: BuildGameResult): string {
 }
 
 function bindResultTabs(): void {
-  const tabButtons = results.querySelectorAll<HTMLButtonElement>(".results-tab");
-  const panes = results.querySelectorAll<HTMLElement>(".results-pane");
+  const tabButtons =
+    resultsView.querySelectorAll<HTMLButtonElement>(".results-tab");
+  const panes = resultsView.querySelectorAll<HTMLElement>(".results-pane");
   if (!tabButtons.length || !panes.length) return;
 
   for (const button of tabButtons) {
@@ -399,29 +451,54 @@ const form = document.querySelector<HTMLFormElement>("#deck-form");
 const results = document.querySelector<HTMLElement>("#results");
 const layoutPreview = document.querySelector<HTMLElement>("#layout-preview");
 
-if (!playersInput || !setupSelect || !modeSelect || !seedInput || !restartInput || !form || !results || !layoutPreview) {
+if (
+  !playersInput ||
+  !setupSelect ||
+  !modeSelect ||
+  !seedInput ||
+  !restartInput ||
+  !form ||
+  !results ||
+  !layoutPreview
+) {
   throw new Error("UI failed to initialize.");
 }
 
+const playersField = playersInput;
+const setupField = setupSelect;
+const modeField = modeSelect;
+const seedField = seedInput;
+const restartField = restartInput;
+const deckForm = form;
+const resultsView = results;
+const layoutPreviewView = layoutPreview;
+
 function refreshSetups(): void {
-  const players = Number.parseInt(playersInput.value, 10);
-  const mode = modeSelect.value as Mode;
+  const players = Number.parseInt(playersField.value, 10);
+  const mode = modeField.value as Mode;
   const options = getSetupOptions(mode, players);
   const fallback = resolveSetupName(mode, players, null);
-  setupSelect.innerHTML = options.map((option) => `<option value="${option}">${option}</option>`).join("");
-  setupSelect.value = options.includes(fallback) ? fallback : options[0];
-  layoutPreview.innerHTML = renderBoardPreview(mode, players, setupSelect.value);
+  setupField.innerHTML = options
+    .map((option) => `<option value="${option}">${option}</option>`)
+    .join("");
+  setupField.value = options.includes(fallback) ? fallback : options[0];
+  layoutPreviewView.innerHTML = renderBoardPreview(
+    mode,
+    players,
+    setupField.value,
+  );
 }
 
 function generate(): void {
   try {
     const baseOptions = {
-      mode: modeSelect.value as Mode,
-      players: Number.parseInt(playersInput.value, 10),
-      setup: setupSelect.value,
-      restarts: Number.parseInt(restartInput.value, 10)
+      mode: modeField.value as Mode,
+      players: Number.parseInt(playersField.value, 10),
+      setup: setupField.value,
+      restarts: Number.parseInt(restartField.value, 10),
     };
-    const explicitSeed = seedInput.value === "" ? null : Number.parseInt(seedInput.value, 10);
+    const explicitSeed =
+      seedField.value === "" ? null : Number.parseInt(seedField.value, 10);
     let result: BuildGameResult | null = null;
     let lastError: unknown = null;
 
@@ -442,32 +519,38 @@ function generate(): void {
     }
 
     if (!result) {
-      throw new Error("Unable to generate a balanced deck after multiple random attempts.");
+      throw new Error(
+        "Unable to generate a balanced deck after multiple random attempts.",
+      );
     }
 
-    layoutPreview.innerHTML = renderBoardPreview(modeSelect.value as Mode, baseOptions.players, baseOptions.setup);
-    results.innerHTML = renderResult(result);
+    layoutPreviewView.innerHTML = renderBoardPreview(
+      modeField.value as Mode,
+      baseOptions.players,
+      baseOptions.setup,
+    );
+    resultsView.innerHTML = renderResult(result);
     bindResultTabs();
   } catch (error) {
-    layoutPreview.innerHTML = renderBoardPreview(
-      modeSelect.value as Mode,
-      Number.parseInt(playersInput.value, 10),
-      setupSelect.value
+    layoutPreviewView.innerHTML = renderBoardPreview(
+      modeField.value as Mode,
+      Number.parseInt(playersField.value, 10),
+      setupField.value,
     );
-    results.innerHTML = `<p class="error-card">${error instanceof Error ? error.message : String(error)}</p>`;
+    resultsView.innerHTML = `<p class="error-card">${error instanceof Error ? error.message : String(error)}</p>`;
   }
 }
 
-playersInput.addEventListener("change", () => {
+playersField.addEventListener("change", () => {
   refreshSetups();
   generate();
 });
-modeSelect.addEventListener("change", () => {
+modeField.addEventListener("change", () => {
   refreshSetups();
   generate();
 });
-setupSelect.addEventListener("change", generate);
-form.addEventListener("submit", (event) => {
+setupField.addEventListener("change", generate);
+deckForm.addEventListener("submit", (event) => {
   event.preventDefault();
   generate();
 });
