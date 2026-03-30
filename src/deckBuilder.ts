@@ -80,6 +80,15 @@ export type BuildGameResult = {
   summary: Summary;
 };
 
+export type BuildGameOptions = {
+  mode: Mode;
+  players: number;
+  setup?: string | null;
+  seed?: number | null;
+  restarts?: number;
+  constraintCheck?: (playerTotals: Totals[]) => boolean;
+};
+
 const FEATURE_WEIGHTS: Totals = {
   resources: 25,
   influence: 25,
@@ -229,7 +238,7 @@ function totalsWithDelta(totals: Totals, add?: Tile, remove?: Tile): Totals {
   return updated;
 }
 
-function satisfiesPrimaryConstraint(playerTotals: Totals[]): boolean {
+export function satisfiesPrimaryConstraint(playerTotals: Totals[]): boolean {
   return PRIMARY_CONSTRAINT_FEATURES.every((feature) => {
     const values = playerTotals.map((totals) => totals[feature]);
     return Math.max(...values) - Math.min(...values) <= MAX_PRIMARY_SPREAD;
@@ -330,7 +339,7 @@ export function getSetupOptions(mode: Mode, players: number): string[] {
   return options ? Object.keys(options) : [];
 }
 
-function validateModePlayers(mode: Mode, players: number): void {
+export function validateModePlayers(mode: Mode, players: number): void {
   if (!(String(players) in setupRulesForMode(mode))) {
     throw new Error(
       mode === "base"
@@ -358,7 +367,7 @@ export function resolveSetupName(
   return setup;
 }
 
-function dealColorGroup(
+export function dealColorGroup(
   tiles: Tile[],
   players: number,
   perPlayer: number,
@@ -436,13 +445,7 @@ function dealColorGroup(
   return { decks: bestAssignment, leftovers };
 }
 
-export function buildGame(options: {
-  mode: Mode;
-  players: number;
-  setup?: string | null;
-  seed?: number | null;
-  restarts?: number;
-}): BuildGameResult {
+export function buildGame(options: BuildGameOptions): BuildGameResult {
   const mode = options.mode;
   const players = options.players;
   const seed = options.seed ?? null;
@@ -489,7 +492,8 @@ export function buildGame(options: {
     ),
   );
   const refined = refineDecks(mergedDecks, capacities);
-  if (!satisfiesPrimaryConstraint(refined.deckTotals)) {
+  const constraintCheck = options.constraintCheck ?? satisfiesPrimaryConstraint;
+  if (!constraintCheck(refined.deckTotals)) {
     throw new Error(
       "Unable to generate decks with resource and influence spread both at 1 or less.",
     );
