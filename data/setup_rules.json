@@ -1,40 +1,82 @@
 {
   "base": {
     "3": {
-      "standard": { "per_player": { "blue": 6, "red": 2 }, "shared": { "blue": 0, "red": 0 } }
+      "standard": {
+        "per_player": { "blue": 6, "red": 2 },
+        "shared": { "blue": 0, "red": 0 }
+      }
     },
     "4": {
-      "standard": { "per_player": { "blue": 5, "red": 3 }, "shared": { "blue": 0, "red": 0 } },
-      "hyperlanes": { "per_player": { "blue": 3, "red": 2 }, "shared": { "blue": 0, "red": 0 } }
+      "standard": {
+        "per_player": { "blue": 5, "red": 3 },
+        "shared": { "blue": 0, "red": 0 }
+      },
+      "hyperlanes": {
+        "per_player": { "blue": 3, "red": 2 },
+        "shared": { "blue": 0, "red": 0 }
+      }
     },
     "5": {
-      "standard": { "per_player": { "blue": 4, "red": 2 }, "shared": { "blue": 0, "red": 1 } },
-      "hyperlanes": { "per_player": { "blue": 3, "red": 2 }, "shared": { "blue": 0, "red": 0 } }
+      "standard": {
+        "per_player": { "blue": 4, "red": 2 },
+        "shared": { "blue": 0, "red": 1 }
+      },
+      "hyperlanes": {
+        "per_player": { "blue": 3, "red": 2 },
+        "shared": { "blue": 0, "red": 0 }
+      }
     },
     "6": {
-      "standard": { "per_player": { "blue": 3, "red": 2 }, "shared": { "blue": 0, "red": 0 } }
+      "standard": {
+        "per_player": { "blue": 3, "red": 2 },
+        "shared": { "blue": 0, "red": 0 }
+      }
     }
   },
   "expansion": {
     "3": {
-      "standard": { "per_player": { "blue": 6, "red": 2 }, "shared": { "blue": 0, "red": 0 } }
+      "standard": {
+        "per_player": { "blue": 6, "red": 2 },
+        "shared": { "blue": 0, "red": 0 }
+      }
     },
     "4": {
-      "standard": { "per_player": { "blue": 5, "red": 3 }, "shared": { "blue": 0, "red": 0 } },
-      "hyperlanes": { "per_player": { "blue": 3, "red": 2 }, "shared": { "blue": 0, "red": 0 } }
+      "standard": {
+        "per_player": { "blue": 5, "red": 3 },
+        "shared": { "blue": 0, "red": 0 }
+      },
+      "hyperlanes": {
+        "per_player": { "blue": 3, "red": 2 },
+        "shared": { "blue": 0, "red": 0 }
+      }
     },
     "5": {
-      "hyperlanes": { "per_player": { "blue": 3, "red": 2 }, "shared": { "blue": 0, "red": 0 } },
-      "standard": { "per_player": { "blue": 4, "red": 2 }, "shared": { "blue": 0, "red": 1 } }
+      "hyperlanes": {
+        "per_player": { "blue": 3, "red": 2 },
+        "shared": { "blue": 0, "red": 0 }
+      },
+      "standard": {
+        "per_player": { "blue": 4, "red": 2 },
+        "shared": { "blue": 0, "red": 1 }
+      }
     },
     "6": {
-      "standard": { "per_player": { "blue": 3, "red": 2 }, "shared": { "blue": 0, "red": 0 } }
+      "standard": {
+        "per_player": { "blue": 3, "red": 2 },
+        "shared": { "blue": 0, "red": 0 }
+      }
     },
     "7": {
-      "hyperlanes": { "per_player": { "blue": 4, "red": 2 }, "shared": { "blue": 3, "red": 2 } }
+      "hyperlanes": {
+        "per_player": { "blue": 4, "red": 2 },
+        "shared": { "blue": 3, "red": 2 }
+      }
     },
     "8": {
-      "standard": { "per_player": { "blue": 4, "red": 2 }, "shared": { "blue": 2, "red": 2 } }
+      "standard": {
+        "per_player": { "blue": 4, "red": 2 },
+        "shared": { "blue": 2, "red": 2 }
+      }
     }
   }
 }

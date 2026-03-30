@@ -3,15 +3,14 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import random
 import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
-
+from typing import Any, Iterable, MutableSequence, TypeVar
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
+T = TypeVar("T")
 
 
 FEATURE_ORDER = (
@@ -49,7 +48,7 @@ class SeededRng:
         self.state = (1664525 * self.state + 1013904223) & 0xFFFFFFFF
         return self.state / 4294967296.0
 
-    def shuffle(self, items: list[object]) -> None:
+    def shuffle(self, items: MutableSequence[T]) -> None:
         for index in range(len(items) - 1, 0, -1):
             swap_index = int(self.random() * (index + 1))
             items[index], items[swap_index] = items[swap_index], items[index]
@@ -142,7 +141,7 @@ def tile(
 
 def load_tiles_from_json(path: Path | None = None) -> list[Tile]:
     source = path or DATA_DIR / "tiles.json"
-    payload = json.loads(source.read_text(encoding="utf-8"))
+    payload: list[dict[str, Any]] = json.loads(source.read_text(encoding="utf-8"))
     tiles: list[Tile] = []
     for entry in payload:
         planets = [
@@ -172,9 +171,13 @@ def load_tiles_from_json(path: Path | None = None) -> list[Tile]:
     return tiles
 
 
-def load_setup_rules(path: Path | None = None) -> dict[str, dict[int, dict[str, dict[str, dict[str, int]]]]]:
+def load_setup_rules(
+    path: Path | None = None,
+) -> dict[str, dict[int, dict[str, dict[str, dict[str, int]]]]]:
     source = path or DATA_DIR / "setup_rules.json"
-    payload = json.loads(source.read_text(encoding="utf-8"))
+    payload: dict[str, dict[str, dict[str, dict[str, dict[str, int]]]]] = json.loads(
+        source.read_text(encoding="utf-8")
+    )
     return {
         group: {int(players): setups for players, setups in group_rules.items()}
         for group, group_rules in payload.items()
@@ -200,7 +203,9 @@ def feature_totals(tiles: Iterable[Tile]) -> dict[str, float]:
     return totals
 
 
-def score_totals(player_totals: list[dict[str, float]], targets: list[dict[str, float]]) -> float:
+def score_totals(
+    player_totals: list[dict[str, float]], targets: list[dict[str, float]]
+) -> float:
     score = 0.0
     for totals, target in zip(player_totals, targets):
         for feature in FEATURE_ORDER:
@@ -214,24 +219,32 @@ def score_totals(player_totals: list[dict[str, float]], targets: list[dict[str, 
     return score
 
 
-def build_targets(overall_totals: dict[str, float], capacities: list[int]) -> list[dict[str, float]]:
+def build_targets(
+    overall_totals: dict[str, float], capacities: list[int]
+) -> list[dict[str, float]]:
     total_tiles = sum(capacities)
     targets: list[dict[str, float]] = []
     for capacity in capacities:
         share = capacity / total_tiles
-        targets.append({feature: overall_totals[feature] * share for feature in FEATURE_ORDER})
+        targets.append(
+            {feature: overall_totals[feature] * share for feature in FEATURE_ORDER}
+        )
     return targets
 
 
 def weighted_magnitude(entry: Tile) -> float:
-    return sum(FEATURE_WEIGHTS[feature] * value for feature, value in entry.metrics.items())
+    return sum(
+        FEATURE_WEIGHTS[feature] * value for feature, value in entry.metrics.items()
+    )
 
 
 def player_label(index: int) -> str:
     return f"Player {index + 1}"
 
 
-def totals_with_delta(totals: dict[str, float], add: Tile | None = None, remove: Tile | None = None) -> dict[str, float]:
+def totals_with_delta(
+    totals: dict[str, float], add: Tile | None = None, remove: Tile | None = None
+) -> dict[str, float]:
     updated = totals.copy()
     if remove is not None:
         for feature in FEATURE_ORDER:
@@ -244,7 +257,8 @@ def totals_with_delta(totals: dict[str, float], add: Tile | None = None, remove:
 
 def primary_spreads(player_totals: list[dict[str, float]]) -> dict[str, float]:
     return {
-        feature: max(totals[feature] for totals in player_totals) - min(totals[feature] for totals in player_totals)
+        feature: max(totals[feature] for totals in player_totals)
+        - min(totals[feature] for totals in player_totals)
         for feature in PRIMARY_CONSTRAINT_FEATURES
     }
 
@@ -270,14 +284,25 @@ def refine_decks(
             for second_player in range(first_player + 1, len(decks)):
                 for first_index, first_tile in enumerate(decks[first_player]):
                     for second_index, second_tile in enumerate(decks[second_player]):
-                        trial_first = totals_with_delta(deck_totals[first_player], add=second_tile, remove=first_tile)
-                        trial_second = totals_with_delta(deck_totals[second_player], add=first_tile, remove=second_tile)
+                        trial_first = totals_with_delta(
+                            deck_totals[first_player],
+                            add=second_tile,
+                            remove=first_tile,
+                        )
+                        trial_second = totals_with_delta(
+                            deck_totals[second_player],
+                            add=first_tile,
+                            remove=second_tile,
+                        )
                         trial_totals = deck_totals[:]
                         trial_totals[first_player] = trial_first
                         trial_totals[second_player] = trial_second
                         trial_score = score_totals(trial_totals, targets)
                         if trial_score + 1e-9 < current_score:
-                            decks[first_player][first_index], decks[second_player][second_index] = second_tile, first_tile
+                            (
+                                decks[first_player][first_index],
+                                decks[second_player][second_index],
+                            ) = (second_tile, first_tile)
                             deck_totals[first_player] = trial_first
                             deck_totals[second_player] = trial_second
                             improved = True
@@ -318,7 +343,9 @@ def deal_color_group(
 
     for _ in range(restarts):
         decks: list[list[Tile]] = [[] for _ in range(players)]
-        deck_totals = [{feature: 0.0 for feature in FEATURE_ORDER} for _ in range(players)]
+        deck_totals = [
+            {feature: 0.0 for feature in FEATURE_ORDER} for _ in range(players)
+        ]
         counts = [0] * players
 
         ordered_tiles = [
@@ -334,10 +361,15 @@ def deal_color_group(
                     continue
                 next_count = counts[player_index] + 1
                 fill_ratio = next_count / capacities[player_index]
-                provisional_target = {feature: targets[player_index][feature] * fill_ratio for feature in FEATURE_ORDER}
+                provisional_target = {
+                    feature: targets[player_index][feature] * fill_ratio
+                    for feature in FEATURE_ORDER
+                }
                 score = 0.0
                 for feature in FEATURE_ORDER:
-                    projected = deck_totals[player_index][feature] + entry.metrics[feature]
+                    projected = (
+                        deck_totals[player_index][feature] + entry.metrics[feature]
+                    )
                     delta = projected - provisional_target[feature]
                     score += FEATURE_WEIGHTS[feature] * delta * delta
                 score += rng.random() * 0.01
@@ -359,7 +391,10 @@ def deal_color_group(
 
     summary = summarize_assignment(best_assignment, capacities)
     summary["score"] = round(best_score, 4)
-    summary["leftover_tiles"] = [{"id": entry.tile_id, "name": entry.name} for entry in sorted(leftovers, key=lambda tile: int(tile.tile_id))]
+    summary["leftover_tiles"] = [
+        {"id": entry.tile_id, "name": entry.name}
+        for entry in sorted(leftovers, key=lambda tile: int(tile.tile_id))
+    ]
     return best_assignment, leftovers, summary
 
 
@@ -380,7 +415,9 @@ def resolve_setup_name(mode: str, players: int, setup: str | None) -> str:
         return next(iter(options))
     normalized = setup.lower()
     if normalized not in options:
-        raise ValueError(f"Unsupported setup '{setup}' for {players} players. Choose from: {', '.join(sorted(options))}.")
+        raise ValueError(
+            f"Unsupported setup '{setup}' for {players} players. Choose from: {', '.join(sorted(options))}."
+        )
     return normalized
 
 
@@ -391,7 +428,7 @@ def build_game(
     setup: str | None,
     seed: int | None = None,
     restarts: int = 500,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     validate_mode_players(mode, players)
     setup_name = resolve_setup_name(mode, players, setup)
     rules = setup_rules_for_mode(mode)[players][setup_name]
@@ -412,14 +449,14 @@ def build_game(
 
     blue_seed = None if seed is None else seed * 2 + 1
     red_seed = None if seed is None else seed * 2 + 2
-    blue_decks, blue_leftovers, blue_summary = deal_color_group(
+    blue_decks, blue_leftovers, _ = deal_color_group(
         player_blue_pool,
         players,
         rules["per_player"]["blue"],
         seed=blue_seed,
         restarts=restarts,
     )
-    red_decks, red_leftovers, red_summary = deal_color_group(
+    red_decks, red_leftovers, _ = deal_color_group(
         player_red_pool,
         players,
         rules["per_player"]["red"],
@@ -439,17 +476,23 @@ def build_game(
     overall_totals = feature_totals(tile for deck in decks for tile in deck)
     targets = build_targets(overall_totals, capacities)
     if not satisfies_primary_constraint(deck_totals):
-        raise ValueError("Unable to generate decks with resource and influence spread both at 1 or less.")
+        raise ValueError(
+            "Unable to generate decks with resource and influence spread both at 1 or less."
+        )
     summary["score"] = round(score_totals(deck_totals, targets), 4)
     summary["setup"] = setup_name
     summary["per_player"] = rules["per_player"]
     summary["shared_tiles"] = [
         {"id": entry.tile_id, "name": entry.name}
-        for entry in sorted(shared_blue + shared_red, key=lambda tile: int(tile.tile_id))
+        for entry in sorted(
+            shared_blue + shared_red, key=lambda tile: int(tile.tile_id)
+        )
     ]
     summary["unused_tiles"] = [
         {"id": entry.tile_id, "name": entry.name}
-        for entry in sorted(blue_leftovers + red_leftovers, key=lambda tile: int(tile.tile_id))
+        for entry in sorted(
+            blue_leftovers + red_leftovers, key=lambda tile: int(tile.tile_id)
+        )
     ]
     return {
         "mode": mode,
@@ -461,11 +504,13 @@ def build_game(
     }
 
 
-def summarize_assignment(decks: list[list[Tile]], capacities: list[int]) -> dict[str, object]:
+def summarize_assignment(
+    decks: list[list[Tile]], capacities: list[int]
+) -> dict[str, Any]:
     overall_totals = feature_totals(tile for deck in decks for tile in deck)
     targets = build_targets(overall_totals, capacities)
-    result_players = []
-    actual_totals = []
+    result_players: list[dict[str, Any]] = []
+    actual_totals: list[dict[str, float]] = []
     for player_index, deck in enumerate(decks):
         totals = feature_totals(deck)
         actual_totals.append(totals)
@@ -480,7 +525,7 @@ def summarize_assignment(decks: list[list[Tile]], capacities: list[int]) -> dict
             }
         )
 
-    max_spread = {}
+    max_spread: dict[str, float] = {}
     for feature in FEATURE_ORDER:
         values = [totals[feature] for totals in actual_totals]
         max_spread[feature] = max(values) - min(values)
@@ -492,7 +537,9 @@ def summarize_assignment(decks: list[list[Tile]], capacities: list[int]) -> dict
     }
 
 
-def format_text_output(mode: str, players: int, setup: str, seed: int | None, summary: dict[str, object]) -> str:
+def format_text_output(
+    mode: str, players: int, setup: str, seed: int | None, summary: dict[str, Any]
+) -> str:
     lines = [
         f"Mode: {mode}",
         f"Players: {players}",
@@ -505,14 +552,19 @@ def format_text_output(mode: str, players: int, setup: str, seed: int | None, su
     if summary["shared_tiles"]:
         lines.append(
             "Shared setup tiles: "
-            + ", ".join(f"{tile['id']} {tile['name']}" for tile in summary["shared_tiles"])
+            + ", ".join(
+                f"{tile['id']} {tile['name']}" for tile in summary["shared_tiles"]
+            )
         )
         lines.append("")
     for player in summary["players"]:
         lines.append(f"{player['player']} ({player['tile_count']} tiles)")
         lines.append(
             "  Tiles: "
-            + ", ".join(f"{tile['id']} {tile['name']}" for tile in sorted(player["tiles"], key=lambda entry: entry["id"]))
+            + ", ".join(
+                f"{tile['id']} {tile['name']}"
+                for tile in sorted(player["tiles"], key=lambda entry: entry["id"])
+            )
         )
         totals = player["totals"]
         lines.append(
@@ -543,21 +595,35 @@ def format_text_output(mode: str, players: int, setup: str, seed: int | None, su
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build balanced Twilight Imperium 4 system-tile decks.")
+    parser = argparse.ArgumentParser(
+        description="Build balanced Twilight Imperium 4 system-tile decks."
+    )
     parser.add_argument(
         "--mode",
         choices=("base", "pok", "prophecy_of_kings", "thunders_edge", "thunder_edge"),
         required=True,
         help="Which tile pool to use.",
     )
-    parser.add_argument("--players", type=int, required=True, help="Number of players to build decks for.")
+    parser.add_argument(
+        "--players",
+        type=int,
+        required=True,
+        help="Number of players to build decks for.",
+    )
     parser.add_argument(
         "--setup",
         default=None,
         help="Board setup variant. Examples: standard, hyperlanes, alternate, large.",
     )
-    parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducible output.")
-    parser.add_argument("--restarts", type=int, default=500, help="How many random balancing attempts to try.")
+    parser.add_argument(
+        "--seed", type=int, default=None, help="Random seed for reproducible output."
+    )
+    parser.add_argument(
+        "--restarts",
+        type=int,
+        default=500,
+        help="How many random balancing attempts to try.",
+    )
     parser.add_argument(
         "--format",
         choices=("text", "json"),
@@ -570,13 +636,22 @@ def parse_args() -> argparse.Namespace:
 def pool_for_mode(mode: str) -> list[Tile]:
     canonical = mode.lower()
     allowed = TILES_BY_MODE[canonical]
-    return [entry for entry in ALL_TILES if entry.expansion in allowed and not entry.special]
+    return [
+        entry for entry in ALL_TILES if entry.expansion in allowed and not entry.special
+    ]
 
 
 def main() -> None:
     args = parse_args()
     pool = pool_for_mode(args.mode)
-    result = build_game(pool, args.mode, args.players, args.setup, seed=args.seed, restarts=args.restarts)
+    result = build_game(
+        pool,
+        args.mode,
+        args.players,
+        args.setup,
+        seed=args.seed,
+        restarts=args.restarts,
+    )
     if args.format == "json":
         payload = {
             "mode": result["mode"],
@@ -586,7 +661,9 @@ def main() -> None:
             "decks": [
                 {
                     "player": player_label(index),
-                    "tiles": [{"id": entry.tile_id, "name": entry.name} for entry in deck],
+                    "tiles": [
+                        {"id": entry.tile_id, "name": entry.name} for entry in deck
+                    ],
                     "totals": feature_totals(deck),
                 }
                 for index, deck in enumerate(result["decks"])
@@ -596,7 +673,15 @@ def main() -> None:
         print(json.dumps(payload, indent=2))
         return
 
-    print(format_text_output(result["mode"], result["players"], result["setup"], result["seed"], result["summary"]))
+    print(
+        format_text_output(
+            result["mode"],
+            result["players"],
+            result["setup"],
+            result["seed"],
+            result["summary"],
+        )
+    )
 
 
 if __name__ == "__main__":

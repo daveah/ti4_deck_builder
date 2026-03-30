@@ -1,7 +1,12 @@
 import tileData from "../data/tiles.json";
 import setupRulesJson from "../data/setup_rules.json";
 
-export type Mode = "base" | "pok" | "prophecy_of_kings" | "thunders_edge" | "thunder_edge";
+export type Mode =
+  | "base"
+  | "pok"
+  | "prophecy_of_kings"
+  | "thunders_edge"
+  | "thunder_edge";
 export type Planet = {
   name: string;
   resources: number;
@@ -34,7 +39,15 @@ type SetupRulesFile = {
   expansion: SetupRulesByPlayers;
 };
 
-const FEATURE_ORDER = ["resources", "influence", "planets", "traits", "tech_skips", "wormholes", "legendary"] as const;
+const FEATURE_ORDER = [
+  "resources",
+  "influence",
+  "planets",
+  "traits",
+  "tech_skips",
+  "wormholes",
+  "legendary",
+] as const;
 type Feature = (typeof FEATURE_ORDER)[number];
 export type Totals = Record<Feature, number>;
 
@@ -74,7 +87,7 @@ const FEATURE_WEIGHTS: Totals = {
   traits: 0.8,
   tech_skips: 0.8,
   wormholes: 0.8,
-  legendary: 0.5
+  legendary: 0.5,
 };
 
 const PRIMARY_CONSTRAINT_FEATURES = ["resources", "influence"] as const;
@@ -85,7 +98,7 @@ const TILES_BY_MODE: Record<Mode, Set<string>> = {
   pok: new Set(["base", "pok"]),
   prophecy_of_kings: new Set(["base", "pok"]),
   thunders_edge: new Set(["base", "pok", "thunders_edge"]),
-  thunder_edge: new Set(["base", "pok", "thunders_edge"])
+  thunder_edge: new Set(["base", "pok", "thunders_edge"]),
 };
 
 const SETUP_RULES = setupRulesJson as SetupRulesFile;
@@ -94,7 +107,8 @@ export class SeededRng {
   state: number;
 
   constructor(seed: number | null = null) {
-    const initial = seed === null ? Math.floor(Math.random() * 0xffffffff) : seed;
+    const initial =
+      seed === null ? Math.floor(Math.random() * 0xffffffff) : seed;
     this.state = initial >>> 0;
     if (this.state === 0) {
       this.state = 0x6d2b79f5;
@@ -115,13 +129,27 @@ export class SeededRng {
 }
 
 function emptyTotals(): Totals {
-  return { resources: 0, influence: 0, planets: 0, traits: 0, tech_skips: 0, wormholes: 0, legendary: 0 };
+  return {
+    resources: 0,
+    influence: 0,
+    planets: 0,
+    traits: 0,
+    tech_skips: 0,
+    wormholes: 0,
+    legendary: 0,
+  };
 }
 
 function tileMetrics(tile: Tile): Totals {
   const totals = emptyTotals();
-  totals.resources = tile.planets.reduce((sum, planet) => sum + planet.resources, 0);
-  totals.influence = tile.planets.reduce((sum, planet) => sum + planet.influence, 0);
+  totals.resources = tile.planets.reduce(
+    (sum, planet) => sum + planet.resources,
+    0,
+  );
+  totals.influence = tile.planets.reduce(
+    (sum, planet) => sum + planet.influence,
+    0,
+  );
   totals.planets = tile.planets.length;
   totals.wormholes = tile.wormholes.length;
   for (const planet of tile.planets) {
@@ -132,11 +160,15 @@ function tileMetrics(tile: Tile): Totals {
   return totals;
 }
 
-export const ALL_TILES: Tile[] = (tileData as Tile[]).map((tile) => ({ ...tile }));
+export const ALL_TILES: Tile[] = (tileData as Tile[]).map((tile) => ({
+  ...tile,
+}));
 
 export function poolForMode(mode: Mode): Tile[] {
   const allowed = TILES_BY_MODE[mode];
-  return ALL_TILES.filter((tile) => allowed.has(tile.expansion) && !tile.special);
+  return ALL_TILES.filter(
+    (tile) => allowed.has(tile.expansion) && !tile.special,
+  );
 }
 
 function featureTotals(tiles: Iterable<Tile>): Totals {
@@ -153,7 +185,8 @@ function buildTargets(overallTotals: Totals, capacities: number[]): Totals[] {
   return capacities.map((capacity) => {
     const share = capacity / totalTiles;
     const totals = emptyTotals();
-    for (const feature of FEATURE_ORDER) totals[feature] = overallTotals[feature] * share;
+    for (const feature of FEATURE_ORDER)
+      totals[feature] = overallTotals[feature] * share;
     return totals;
   });
 }
@@ -168,7 +201,8 @@ function scoreTotals(playerTotals: Totals[], targets: Totals[]): number {
   }
   for (const feature of PRIMARY_CONSTRAINT_FEATURES) {
     const values = playerTotals.map((totals) => totals[feature]);
-    const spreadOver = Math.max(...values) - Math.min(...values) - MAX_PRIMARY_SPREAD;
+    const spreadOver =
+      Math.max(...values) - Math.min(...values) - MAX_PRIMARY_SPREAD;
     if (spreadOver > 0) score += 1_000_000 * spreadOver * spreadOver;
   }
   return score;
@@ -176,7 +210,10 @@ function scoreTotals(playerTotals: Totals[], targets: Totals[]): number {
 
 function weightedMagnitude(tile: Tile): number {
   const metrics = tileMetrics(tile);
-  return FEATURE_ORDER.reduce((sum, feature) => sum + FEATURE_WEIGHTS[feature] * metrics[feature], 0);
+  return FEATURE_ORDER.reduce(
+    (sum, feature) => sum + FEATURE_WEIGHTS[feature] * metrics[feature],
+    0,
+  );
 }
 
 function totalsWithDelta(totals: Totals, add?: Tile, remove?: Tile): Totals {
@@ -199,21 +236,48 @@ function satisfiesPrimaryConstraint(playerTotals: Totals[]): boolean {
   });
 }
 
-function refineDecks(decks: Tile[][], capacities: number[]): { decks: Tile[][]; deckTotals: Totals[] } {
+function refineDecks(
+  decks: Tile[][],
+  capacities: number[],
+): { decks: Tile[][]; deckTotals: Totals[] } {
   const deckTotals = decks.map((deck) => featureTotals(deck));
   const targets = buildTargets(featureTotals(decks.flat()), capacities);
 
   for (let pass = 0; pass < 200; pass += 1) {
     const currentScore = scoreTotals(deckTotals, targets);
     let improved = false;
-    for (let firstPlayer = 0; firstPlayer < decks.length && !improved; firstPlayer += 1) {
-      for (let secondPlayer = firstPlayer + 1; secondPlayer < decks.length && !improved; secondPlayer += 1) {
-        for (let firstIndex = 0; firstIndex < decks[firstPlayer].length && !improved; firstIndex += 1) {
-          for (let secondIndex = 0; secondIndex < decks[secondPlayer].length && !improved; secondIndex += 1) {
+    for (
+      let firstPlayer = 0;
+      firstPlayer < decks.length && !improved;
+      firstPlayer += 1
+    ) {
+      for (
+        let secondPlayer = firstPlayer + 1;
+        secondPlayer < decks.length && !improved;
+        secondPlayer += 1
+      ) {
+        for (
+          let firstIndex = 0;
+          firstIndex < decks[firstPlayer].length && !improved;
+          firstIndex += 1
+        ) {
+          for (
+            let secondIndex = 0;
+            secondIndex < decks[secondPlayer].length && !improved;
+            secondIndex += 1
+          ) {
             const firstTile = decks[firstPlayer][firstIndex];
             const secondTile = decks[secondPlayer][secondIndex];
-            const trialFirst = totalsWithDelta(deckTotals[firstPlayer], secondTile, firstTile);
-            const trialSecond = totalsWithDelta(deckTotals[secondPlayer], firstTile, secondTile);
+            const trialFirst = totalsWithDelta(
+              deckTotals[firstPlayer],
+              secondTile,
+              firstTile,
+            );
+            const trialSecond = totalsWithDelta(
+              deckTotals[secondPlayer],
+              firstTile,
+              secondTile,
+            );
             const trialTotals = deckTotals.slice();
             trialTotals[firstPlayer] = trialFirst;
             trialTotals[secondPlayer] = trialSecond;
@@ -250,10 +314,10 @@ function summarizeAssignment(decks: Tile[][], capacities: number[]) {
       target_tile_count: capacities[index],
       tile_ids: deck.map((tile) => tile.tile_id),
       tiles: deck.map((tile) => ({ id: tile.tile_id, name: tile.name })),
-      totals: actualTotals[index]
+      totals: actualTotals[index],
     })),
     target_totals: targets,
-    max_spread: maxSpread
+    max_spread: maxSpread,
   };
 }
 
@@ -268,22 +332,45 @@ export function getSetupOptions(mode: Mode, players: number): string[] {
 
 function validateModePlayers(mode: Mode, players: number): void {
   if (!(String(players) in setupRulesForMode(mode))) {
-    throw new Error(mode === "base" ? "Base game mode supports 3 through 6 players." : "This mode supports 3 through 8 players.");
+    throw new Error(
+      mode === "base"
+        ? "Base game mode supports 3 through 6 players."
+        : "This mode supports 3 through 8 players.",
+    );
   }
 }
 
-export function resolveSetupName(mode: Mode, players: number, setup?: string | null): string {
+export function resolveSetupName(
+  mode: Mode,
+  players: number,
+  setup?: string | null,
+): string {
   const options = setupRulesForMode(mode)[String(players)];
-  if (!options) throw new Error(mode === "base" ? "Base game mode supports 3 through 6 players." : "This mode supports 3 through 8 players.");
+  if (!options)
+    throw new Error(
+      mode === "base"
+        ? "Base game mode supports 3 through 6 players."
+        : "This mode supports 3 through 8 players.",
+    );
   if (!setup) return Object.keys(options)[0];
-  if (!(setup in options)) throw new Error(`Unsupported setup '${setup}' for ${players} players.`);
+  if (!(setup in options))
+    throw new Error(`Unsupported setup '${setup}' for ${players} players.`);
   return setup;
 }
 
-function dealColorGroup(tiles: Tile[], players: number, perPlayer: number, seed: number | null, restarts: number) {
+function dealColorGroup(
+  tiles: Tile[],
+  players: number,
+  perPlayer: number,
+  seed: number | null,
+  restarts: number,
+) {
   const rng = new SeededRng(seed);
   const totalNeeded = players * perPlayer;
-  if (totalNeeded > tiles.length) throw new Error(`Need ${totalNeeded} tiles from a pool of ${tiles.length}.`);
+  if (totalNeeded > tiles.length)
+    throw new Error(
+      `Need ${totalNeeded} tiles from a pool of ${tiles.length}.`,
+    );
 
   const selected = tiles.slice();
   rng.shuffle(selected);
@@ -301,8 +388,16 @@ function dealColorGroup(tiles: Tile[], players: number, perPlayer: number, seed:
     const deckTotals = Array.from({ length: players }, () => emptyTotals());
     const counts = Array.from({ length: players }, () => 0);
     const orderedTiles = chosen
-      .map((tile) => ({ priority: weightedMagnitude(tile) + rng.random() * 0.25, tileId: Number(tile.tile_id), tile }))
-      .sort((left, right) => (left.priority === right.priority ? left.tileId - right.tileId : right.priority - left.priority));
+      .map((tile) => ({
+        priority: weightedMagnitude(tile) + rng.random() * 0.25,
+        tileId: Number(tile.tile_id),
+        tile,
+      }))
+      .sort((left, right) =>
+        left.priority === right.priority
+          ? left.tileId - right.tileId
+          : right.priority - left.priority,
+      );
 
     for (const { tile } of orderedTiles) {
       const metrics = tileMetrics(tile);
@@ -325,7 +420,8 @@ function dealColorGroup(tiles: Tile[], players: number, perPlayer: number, seed:
       }
       decks[chosenPlayer].push(tile);
       counts[chosenPlayer] += 1;
-      for (const feature of FEATURE_ORDER) deckTotals[chosenPlayer][feature] += metrics[feature];
+      for (const feature of FEATURE_ORDER)
+        deckTotals[chosenPlayer][feature] += metrics[feature];
     }
 
     const refined = refineDecks(decks, capacities);
@@ -340,7 +436,13 @@ function dealColorGroup(tiles: Tile[], players: number, perPlayer: number, seed:
   return { decks: bestAssignment, leftovers };
 }
 
-export function buildGame(options: { mode: Mode; players: number; setup?: string | null; seed?: number | null; restarts?: number }): BuildGameResult {
+export function buildGame(options: {
+  mode: Mode;
+  players: number;
+  setup?: string | null;
+  seed?: number | null;
+  restarts?: number;
+}): BuildGameResult {
   const mode = options.mode;
   const players = options.players;
   const seed = options.seed ?? null;
@@ -362,22 +464,45 @@ export function buildGame(options: { mode: Mode; players: number; setup?: string
   const sharedRed = shuffledRed.slice(0, rules.shared.red);
   const playerBluePool = shuffledBlue.slice(rules.shared.blue);
   const playerRedPool = shuffledRed.slice(rules.shared.red);
-  const blueResult = dealColorGroup(playerBluePool, players, rules.per_player.blue, seed === null ? null : seed * 2 + 1, restarts);
-  const redResult = dealColorGroup(playerRedPool, players, rules.per_player.red, seed === null ? null : seed * 2 + 2, restarts);
+  const blueResult = dealColorGroup(
+    playerBluePool,
+    players,
+    rules.per_player.blue,
+    seed === null ? null : seed * 2 + 1,
+    restarts,
+  );
+  const redResult = dealColorGroup(
+    playerRedPool,
+    players,
+    rules.per_player.red,
+    seed === null ? null : seed * 2 + 2,
+    restarts,
+  );
 
-  const capacities = Array.from({ length: players }, () => rules.per_player.blue + rules.per_player.red);
+  const capacities = Array.from(
+    { length: players },
+    () => rules.per_player.blue + rules.per_player.red,
+  );
   const mergedDecks = Array.from({ length: players }, (_, index) =>
-    [...blueResult.decks[index], ...redResult.decks[index]].sort((left, right) => Number(left.tile_id) - Number(right.tile_id))
+    [...blueResult.decks[index], ...redResult.decks[index]].sort(
+      (left, right) => Number(left.tile_id) - Number(right.tile_id),
+    ),
   );
   const refined = refineDecks(mergedDecks, capacities);
   if (!satisfiesPrimaryConstraint(refined.deckTotals)) {
-    throw new Error("Unable to generate decks with resource and influence spread both at 1 or less.");
+    throw new Error(
+      "Unable to generate decks with resource and influence spread both at 1 or less.",
+    );
   }
 
   const baseSummary = summarizeAssignment(refined.decks, capacities);
   const targets = buildTargets(featureTotals(refined.decks.flat()), capacities);
-  const sharedTiles = [...sharedBlue, ...sharedRed].sort((left, right) => Number(left.tile_id) - Number(right.tile_id));
-  const unusedTiles = [...blueResult.leftovers, ...redResult.leftovers].sort((left, right) => Number(left.tile_id) - Number(right.tile_id));
+  const sharedTiles = [...sharedBlue, ...sharedRed].sort(
+    (left, right) => Number(left.tile_id) - Number(right.tile_id),
+  );
+  const unusedTiles = [...blueResult.leftovers, ...redResult.leftovers].sort(
+    (left, right) => Number(left.tile_id) - Number(right.tile_id),
+  );
 
   return {
     mode,
@@ -391,8 +516,14 @@ export function buildGame(options: { mode: Mode; players: number; setup?: string
       score: Number(scoreTotals(refined.deckTotals, targets).toFixed(4)),
       setup: setupName,
       per_player: { ...rules.per_player },
-      shared_tiles: sharedTiles.map((tile) => ({ id: tile.tile_id, name: tile.name })),
-      unused_tiles: unusedTiles.map((tile) => ({ id: tile.tile_id, name: tile.name }))
-    }
+      shared_tiles: sharedTiles.map((tile) => ({
+        id: tile.tile_id,
+        name: tile.name,
+      })),
+      unused_tiles: unusedTiles.map((tile) => ({
+        id: tile.tile_id,
+        name: tile.name,
+      })),
+    },
   };
 }

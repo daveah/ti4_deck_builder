@@ -110,7 +110,17 @@ Example:
   "tiles": [
     { "q": 0, "r": 0, "kind": "red", "label": "MR" },
     { "q": -3, "r": 1, "kind": "green", "label": "H1" },
-    { "q": -1, "r": 4, "kind": "hyperlane", "hyperlaneId": "83A", "rotation": 0, "connections": [[0,2],[3,5]] }
+    {
+      "q": -1,
+      "r": 4,
+      "kind": "hyperlane",
+      "hyperlaneId": "83A",
+      "rotation": 0,
+      "connections": [
+        [0, 2],
+        [3, 5]
+      ]
+    }
   ]
 }
 ```
@@ -163,6 +173,19 @@ TypeScript parity tests:
 
 ```powershell
 npm test
+```
+
+Combined checks:
+
+```powershell
+npm run check:all
+```
+
+You can also run just one side:
+
+```powershell
+npm run check:python
+npm run check:ts
 ```
 
 ## Notes
