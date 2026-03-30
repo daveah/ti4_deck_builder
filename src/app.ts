@@ -8,15 +8,11 @@ import {
 } from "./deckBuilder";
 import layoutsJson from "./layouts.json";
 
-const app = document.querySelector<HTMLDivElement>("#app");
-
-if (!app) throw new Error("App root not found.");
-
 const modes: Mode[] = ["base", "pok", "thunders_edge"];
 const RANDOM_RETRY_LIMIT = 40;
 const SQRT3 = Math.sqrt(3);
 
-function describeSetupVariant(
+export function describeSetupVariant(
   mode: Mode,
   players: number,
   setup: string,
@@ -39,7 +35,7 @@ function describeSetupVariant(
   return "This setup changes how many blue and red tiles each player drafts and whether shared center tiles are used.";
 }
 
-type BoardTileKind =
+export type BoardTileKind =
   | "blue"
   | "blue1"
   | "blue2"
@@ -49,7 +45,7 @@ type BoardTileKind =
   | "red"
   | "hyperlane";
 
-type BoardTile = {
+export type BoardTile = {
   q: number;
   r: number;
   kind: BoardTileKind;
@@ -59,7 +55,7 @@ type BoardTile = {
   connections?: number[][];
 };
 
-type LayoutDefinition = {
+export type LayoutDefinition = {
   key: string;
   title: string;
   notes?: string;
@@ -67,21 +63,20 @@ type LayoutDefinition = {
   ref?: string;
 };
 
-type LayoutFile = {
+export type LayoutFile = {
   layouts: LayoutDefinition[];
 };
 
 const layoutFile = layoutsJson as LayoutFile;
 
-function getLayoutDefinition(
+export function getLayoutDefinition(
   mode: Mode,
   players: number,
   setup: string,
+  layouts: LayoutFile = layoutFile,
 ): LayoutDefinition | null {
   const key = `${mode}:${players}:${setup}`;
-  const index = new Map(
-    layoutFile.layouts.map((layout) => [layout.key, layout]),
-  );
+  const index = new Map(layouts.layouts.map((layout) => [layout.key, layout]));
   const visited = new Set<string>();
   let layout = index.get(key) ?? null;
   while (layout?.ref) {
@@ -107,7 +102,7 @@ function getLayoutDefinition(
   return layout;
 }
 
-function rotationTransform(
+export function rotationTransform(
   cx: number,
   cy: number,
   rotation: number | undefined,
@@ -118,7 +113,11 @@ function rotationTransform(
     : ` transform="rotate(${normalized * 60} ${cx} ${cy})"`;
 }
 
-function renderHyperlaneGlyph(tile: BoardTile, cx: number, cy: number): string {
+export function renderHyperlaneGlyph(
+  tile: BoardTile,
+  cx: number,
+  cy: number,
+): string {
   const pairs = tile.connections ?? [
     [0, 3],
     [1, 4],
@@ -146,12 +145,13 @@ function renderHyperlaneGlyph(tile: BoardTile, cx: number, cy: number): string {
   return `<g${rotationTransform(cx, cy, tile.rotation)}>${paths}${label}</g>`;
 }
 
-function renderBoardPreview(
+export function renderBoardPreview(
   mode: Mode,
   players: number,
   setup: string,
+  layouts: LayoutFile = layoutFile,
 ): string {
-  const layout = getLayoutDefinition(mode, players, setup);
+  const layout = getLayoutDefinition(mode, players, setup, layouts);
   const captions = [`${mode} mode`, `${players} players`, `${setup} layout`];
   if (!layout) {
     return `
@@ -240,7 +240,7 @@ function renderBoardPreview(
   `;
 }
 
-function renderResult(result: BuildGameResult): string {
+export function renderResult(result: BuildGameResult): string {
   const players = result.summary.players
     .map((player) => {
       const tiles = player.tiles
@@ -364,7 +364,7 @@ function renderResult(result: BuildGameResult): string {
   `;
 }
 
-function bindResultTabs(): void {
+export function bindResultTabs(resultsView: HTMLElement): void {
   const tabButtons =
     resultsView.querySelectorAll<HTMLButtonElement>(".results-tab");
   const panes = resultsView.querySelectorAll<HTMLElement>(".results-pane");
@@ -387,173 +387,207 @@ function bindResultTabs(): void {
   }
 }
 
-app.innerHTML = `
-  <main class="page-shell">
-    <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">Twilight Imperium 4</p>
-        <h1>Build a galaxy draft that feels fair before the first ship moves.</h1>
-        <p class="lede">Generate balanced system-tile draft stacks for your table, using the official setup rules for the base game, Prophecy of Kings, and Thunder's Edge, with clear callouts for shared center tiles and leftovers.</p>
-        <ol class="instruction-list">
-          <li>Pick your ruleset, player count, and the official setup map variant available for that configuration.</li>
-          <li>Leave the seed blank for a fresh random result, or enter a seed when you want a deal you can reproduce exactly.</li>
-          <li>Deal the listed stacks, place any shared tiles, and ignore the leftovers.</li>
-        </ol>
-        <p class="lede">Setup variants change the shape of the final map. Expansion games at 4, 5, and 7 players can use hyperlane layouts, while 8-player expansion uses the standard shared-center setup.</p>
-      </div>
-      <div class="hero-art" aria-hidden="true">
-        <svg viewBox="0 0 520 420">
-          <defs>
-            <linearGradient id="nebula" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ffcf70" />
-              <stop offset="55%" stop-color="#f06767" />
-              <stop offset="100%" stop-color="#243b6b" />
-            </linearGradient>
-          </defs>
-          <rect width="520" height="420" rx="36" fill="#10192a" />
-          <circle cx="384" cy="108" r="88" fill="url(#nebula)" opacity="0.82" />
-          <circle cx="154" cy="136" r="56" fill="#6ea0ff" opacity="0.34" />
-          <g fill="none" stroke="#f5efe0" stroke-width="6" opacity="0.9">
-            <path d="M112 258 162 228 212 258 212 316 162 346 112 316Z" />
-            <path d="M205 196 255 166 305 196 305 254 255 284 205 254Z" />
-            <path d="M298 258 348 228 398 258 398 316 348 346 298 316Z" />
-          </g>
-          <g fill="#f5efe0">
-            <circle cx="94" cy="92" r="4" />
-            <circle cx="432" cy="60" r="3" />
-            <circle cx="446" cy="246" r="5" />
-            <circle cx="128" cy="364" r="3" />
-          </g>
-        </svg>
-      </div>
-    </section>
-    <section class="control-panel">
-      <form id="deck-form" class="deck-form">
-        <label><span>Mode</span><select id="mode">${modes.map((mode) => `<option value="${mode}">${mode}</option>`).join("")}</select></label>
-        <label><span>Players</span><input id="players" type="number" min="3" max="8" value="6" /></label>
-        <label><span>Setup</span><select id="setup"></select></label>
-        <label><span>Seed</span><input id="seed" type="number" placeholder="Random" /></label>
-        <label><span>Restarts</span><input id="restarts" type="number" min="10" max="5000" value="500" /></label>
-        <button type="submit">Generate balanced decks</button>
-      </form>
-      <div id="layout-preview"></div>
-    </section>
-    <section id="results"></section>
-  </main>
-`;
+export type AppDependencies = {
+  buildGame: typeof buildGame;
+  getSetupOptions: typeof getSetupOptions;
+  resolveSetupName: typeof resolveSetupName;
+};
 
-const playersInput = document.querySelector<HTMLInputElement>("#players");
-const setupSelect = document.querySelector<HTMLSelectElement>("#setup");
-const modeSelect = document.querySelector<HTMLSelectElement>("#mode");
-const seedInput = document.querySelector<HTMLInputElement>("#seed");
-const restartInput = document.querySelector<HTMLInputElement>("#restarts");
-const form = document.querySelector<HTMLFormElement>("#deck-form");
-const results = document.querySelector<HTMLElement>("#results");
-const layoutPreview = document.querySelector<HTMLElement>("#layout-preview");
+export type InitializedApp = {
+  refreshSetups: () => void;
+  generate: () => void;
+  resultsView: HTMLElement;
+  layoutPreviewView: HTMLElement;
+};
 
-if (
-  !playersInput ||
-  !setupSelect ||
-  !modeSelect ||
-  !seedInput ||
-  !restartInput ||
-  !form ||
-  !results ||
-  !layoutPreview
-) {
-  throw new Error("UI failed to initialize.");
-}
+const defaultAppDependencies: AppDependencies = {
+  buildGame,
+  getSetupOptions,
+  resolveSetupName,
+};
 
-const playersField = playersInput;
-const setupField = setupSelect;
-const modeField = modeSelect;
-const seedField = seedInput;
-const restartField = restartInput;
-const deckForm = form;
-const resultsView = results;
-const layoutPreviewView = layoutPreview;
+export function initializeApp(
+  appRoot: HTMLDivElement | null = document.querySelector<HTMLDivElement>(
+    "#app",
+  ),
+  dependencies: AppDependencies = defaultAppDependencies,
+): InitializedApp {
+  if (!appRoot) throw new Error("App root not found.");
 
-function refreshSetups(): void {
-  const players = Number.parseInt(playersField.value, 10);
-  const mode = modeField.value as Mode;
-  const options = getSetupOptions(mode, players);
-  const fallback = resolveSetupName(mode, players, null);
-  setupField.innerHTML = options
-    .map((option) => `<option value="${option}">${option}</option>`)
-    .join("");
-  setupField.value = options.includes(fallback) ? fallback : options[0];
-  layoutPreviewView.innerHTML = renderBoardPreview(
-    mode,
-    players,
-    setupField.value,
-  );
-}
+  appRoot.innerHTML = `
+    <main class="page-shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Twilight Imperium 4</p>
+          <h1>Build a galaxy draft that feels fair before the first ship moves.</h1>
+          <p class="lede">Generate balanced system-tile draft stacks for your table, using the official setup rules for the base game, Prophecy of Kings, and Thunder's Edge, with clear callouts for shared center tiles and leftovers.</p>
+          <ol class="instruction-list">
+            <li>Pick your ruleset, player count, and the official setup map variant available for that configuration.</li>
+            <li>Leave the seed blank for a fresh random result, or enter a seed when you want a deal you can reproduce exactly.</li>
+            <li>Deal the listed stacks, place any shared tiles, and ignore the leftovers.</li>
+          </ol>
+          <p class="lede">Setup variants change the shape of the final map. Expansion games at 4, 5, and 7 players can use hyperlane layouts, while 8-player expansion uses the standard shared-center setup.</p>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <svg viewBox="0 0 520 420">
+            <defs>
+              <linearGradient id="nebula" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffcf70" />
+                <stop offset="55%" stop-color="#f06767" />
+                <stop offset="100%" stop-color="#243b6b" />
+              </linearGradient>
+            </defs>
+            <rect width="520" height="420" rx="36" fill="#10192a" />
+            <circle cx="384" cy="108" r="88" fill="url(#nebula)" opacity="0.82" />
+            <circle cx="154" cy="136" r="56" fill="#6ea0ff" opacity="0.34" />
+            <g fill="none" stroke="#f5efe0" stroke-width="6" opacity="0.9">
+              <path d="M112 258 162 228 212 258 212 316 162 346 112 316Z" />
+              <path d="M205 196 255 166 305 196 305 254 255 284 205 254Z" />
+              <path d="M298 258 348 228 398 258 398 316 348 346 298 316Z" />
+            </g>
+            <g fill="#f5efe0">
+              <circle cx="94" cy="92" r="4" />
+              <circle cx="432" cy="60" r="3" />
+              <circle cx="446" cy="246" r="5" />
+              <circle cx="128" cy="364" r="3" />
+            </g>
+          </svg>
+        </div>
+      </section>
+      <section class="control-panel">
+        <form id="deck-form" class="deck-form">
+          <label><span>Mode</span><select id="mode">${modes.map((mode) => `<option value="${mode}">${mode}</option>`).join("")}</select></label>
+          <label><span>Players</span><input id="players" type="number" min="3" max="8" value="6" /></label>
+          <label><span>Setup</span><select id="setup"></select></label>
+          <label><span>Seed</span><input id="seed" type="number" placeholder="Random" /></label>
+          <label><span>Restarts</span><input id="restarts" type="number" min="10" max="5000" value="500" /></label>
+          <button type="submit">Generate balanced decks</button>
+        </form>
+        <div id="layout-preview"></div>
+      </section>
+      <section id="results"></section>
+    </main>
+  `;
 
-function generate(): void {
-  try {
-    const baseOptions = {
-      mode: modeField.value as Mode,
-      players: Number.parseInt(playersField.value, 10),
-      setup: setupField.value,
-      restarts: Number.parseInt(restartField.value, 10),
-    };
-    const explicitSeed =
-      seedField.value === "" ? null : Number.parseInt(seedField.value, 10);
-    let result: BuildGameResult | null = null;
-    let lastError: unknown = null;
+  const playersInput = appRoot.querySelector<HTMLInputElement>("#players");
+  const setupSelect = appRoot.querySelector<HTMLSelectElement>("#setup");
+  const modeSelect = appRoot.querySelector<HTMLSelectElement>("#mode");
+  const seedInput = appRoot.querySelector<HTMLInputElement>("#seed");
+  const restartInput = appRoot.querySelector<HTMLInputElement>("#restarts");
+  const form = appRoot.querySelector<HTMLFormElement>("#deck-form");
+  const results = appRoot.querySelector<HTMLElement>("#results");
+  const layoutPreview = appRoot.querySelector<HTMLElement>("#layout-preview");
 
-    if (explicitSeed !== null) {
-      result = buildGame({ ...baseOptions, seed: explicitSeed });
-    } else {
-      for (let attempt = 0; attempt < RANDOM_RETRY_LIMIT; attempt += 1) {
-        try {
-          result = buildGame({ ...baseOptions, seed: null });
-          break;
-        } catch (error) {
-          lastError = error;
-        }
-      }
-      if (!result && lastError) {
-        throw lastError;
-      }
-    }
+  if (
+    !playersInput ||
+    !setupSelect ||
+    !modeSelect ||
+    !seedInput ||
+    !restartInput ||
+    !form ||
+    !results ||
+    !layoutPreview
+  ) {
+    throw new Error("UI failed to initialize.");
+  }
 
-    if (!result) {
-      throw new Error(
-        "Unable to generate a balanced deck after multiple random attempts.",
-      );
-    }
+  const playersField = playersInput;
+  const setupField = setupSelect;
+  const modeField = modeSelect;
+  const seedField = seedInput;
+  const restartField = restartInput;
+  const deckForm = form;
+  const resultsView = results;
+  const layoutPreviewView = layoutPreview;
 
+  function refreshSetups(): void {
+    const players = Number.parseInt(playersField.value, 10);
+    const mode = modeField.value as Mode;
+    const options = dependencies.getSetupOptions(mode, players);
+    const fallback = dependencies.resolveSetupName(mode, players, null);
+    setupField.innerHTML = options
+      .map((option) => `<option value="${option}">${option}</option>`)
+      .join("");
+    setupField.value = options.includes(fallback) ? fallback : options[0];
     layoutPreviewView.innerHTML = renderBoardPreview(
-      modeField.value as Mode,
-      baseOptions.players,
-      baseOptions.setup,
-    );
-    resultsView.innerHTML = renderResult(result);
-    bindResultTabs();
-  } catch (error) {
-    layoutPreviewView.innerHTML = renderBoardPreview(
-      modeField.value as Mode,
-      Number.parseInt(playersField.value, 10),
+      mode,
+      players,
       setupField.value,
     );
-    resultsView.innerHTML = `<p class="error-card">${error instanceof Error ? error.message : String(error)}</p>`;
   }
+
+  function generate(): void {
+    try {
+      const baseOptions = {
+        mode: modeField.value as Mode,
+        players: Number.parseInt(playersField.value, 10),
+        setup: setupField.value,
+        restarts: Number.parseInt(restartField.value, 10),
+      };
+      const explicitSeed =
+        seedField.value === "" ? null : Number.parseInt(seedField.value, 10);
+      let result: BuildGameResult | null = null;
+      let lastError: unknown = null;
+
+      if (explicitSeed !== null) {
+        result = dependencies.buildGame({ ...baseOptions, seed: explicitSeed });
+      } else {
+        for (let attempt = 0; attempt < RANDOM_RETRY_LIMIT; attempt += 1) {
+          try {
+            result = dependencies.buildGame({ ...baseOptions, seed: null });
+            break;
+          } catch (error) {
+            lastError = error;
+          }
+        }
+        if (!result && lastError) {
+          throw lastError;
+        }
+      }
+
+      if (!result) {
+        throw new Error(
+          "Unable to generate a balanced deck after multiple random attempts.",
+        );
+      }
+
+      layoutPreviewView.innerHTML = renderBoardPreview(
+        modeField.value as Mode,
+        baseOptions.players,
+        baseOptions.setup,
+      );
+      resultsView.innerHTML = renderResult(result);
+      bindResultTabs(resultsView);
+    } catch (error) {
+      layoutPreviewView.innerHTML = renderBoardPreview(
+        modeField.value as Mode,
+        Number.parseInt(playersField.value, 10),
+        setupField.value,
+      );
+      resultsView.innerHTML = `<p class="error-card">${error instanceof Error ? error.message : String(error)}</p>`;
+    }
+  }
+
+  playersField.addEventListener("change", () => {
+    refreshSetups();
+    generate();
+  });
+  modeField.addEventListener("change", () => {
+    refreshSetups();
+    generate();
+  });
+  setupField.addEventListener("change", generate);
+  deckForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    generate();
+  });
+
+  refreshSetups();
+  generate();
+
+  return { refreshSetups, generate, resultsView, layoutPreviewView };
 }
 
-playersField.addEventListener("change", () => {
-  refreshSetups();
-  generate();
-});
-modeField.addEventListener("change", () => {
-  refreshSetups();
-  generate();
-});
-setupField.addEventListener("change", generate);
-deckForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  generate();
-});
-
-refreshSetups();
-generate();
+if (typeof document !== "undefined" && document.querySelector("#app")) {
+  initializeApp();
+}
