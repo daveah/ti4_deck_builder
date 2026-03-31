@@ -6,6 +6,8 @@ import {
   type BuildGameResult,
   type Mode,
 } from "./deckBuilder";
+import factionsJson from "../data/factions.json";
+import strategyCardsJson from "../data/strategy_cards.json";
 import layoutsJson from "./layouts.json";
 
 const modes: Mode[] = ["base", "pok", "thunders_edge"];
@@ -68,6 +70,24 @@ export type LayoutFile = {
 };
 
 const layoutFile = layoutsJson as LayoutFile;
+const factionsByMode = factionsJson as Record<Mode, string[]>;
+const strategyCards = strategyCardsJson as Array<{
+  initiative: number;
+  name: string;
+}>;
+
+type TrackerAssignment = {
+  slot: number;
+  passed: boolean;
+};
+
+type TrackerState = {
+  expansion: Mode;
+  playerCount: number;
+  selectedFactions: string[];
+  assignments: Record<string, TrackerAssignment>;
+  draggingFaction: string | null;
+};
 
 export function getLayoutDefinition(
   mode: Mode,
@@ -426,22 +446,38 @@ export function bindResultTabs(resultsView: HTMLElement): void {
 }
 
 export function renderTurnTracker(playerCount = 6): string {
+  const expansionOptions = modes
+    .map(
+      (mode) =>
+        `<option value="${mode}">${mode === "pok" ? "Prophecy of Kings" : mode === "thunders_edge" ? "Thunder's Edge" : "Base Game"}</option>`,
+    )
+    .join("");
   const rows = Array.from({ length: playerCount }, (_, index) => {
     const playerNumber = index + 1;
     return `
-      <div class="tracker-row${index === 0 ? " is-active" : ""}" data-player-index="${index}">
+      <div class="tracker-row" data-player-index="${index}">
         <div class="tracker-row-main">
           <span class="tracker-seat">P${playerNumber}</span>
-          <input
-            class="tracker-name-input"
-            data-name-index="${index}"
-            type="text"
-            value="Player ${playerNumber}"
-            aria-label="Player ${playerNumber} name"
-          />
+          <select class="tracker-faction-select" data-faction-index="${index}" aria-label="Player ${playerNumber} faction">
+            <option value="">Select race</option>
+          </select>
         </div>
-        <button type="button" class="tracker-set-active" data-set-active="${index}">Set Active</button>
       </div>
+    `;
+  }).join("");
+
+  const strategySlots = Array.from({ length: 9 }, (_, index) => {
+    const value = index;
+    const card = strategyCards.find((entry) => entry.initiative === value);
+    const label = value === 0 ? "Naalu Token" : card?.name ?? `Strategy Card ${value}`;
+    return `
+      <article class="strategy-slot" data-strategy-slot="${value}">
+        <div class="strategy-number">${value}</div>
+        <div class="strategy-copy">
+          <h3>${label}</h3>
+          <p>${value === 0 ? "Reserved for the Naalu initiative token." : `Strategy card ${value}.`}</p>
+        </div>
+      </article>
     `;
   }).join("");
 
@@ -450,15 +486,15 @@ export function renderTurnTracker(playerCount = 6): string {
       <div class="tracker-topline">
         <div>
           <p class="eyebrow">Turn Order Tracker</p>
-          <h2>Track initiative and pass the turn around the table.</h2>
-          <p class="lede">Use this panel to keep a shared turn marker moving, rename seats for your table, and jump directly to any player when the order changes.</p>
-        </div>
-        <div class="tracker-summary">
-          <span>Round <strong id="tracker-round-label">1</strong></span>
-          <span>Active <strong id="tracker-active-label">Player 1</strong></span>
+          <h2>Set the factions at the table, then track strategy cards in initiative order.</h2>
+          <p class="lede">Choose the expansion, set the seat count, and assign each player a unique faction. The strategy board below is laid out from the Naalu zero position through strategy cards 1 to 8.</p>
         </div>
       </div>
       <div class="tracker-controls">
+        <label>
+          <span>Expansion</span>
+          <select id="tracker-expansion">${expansionOptions}</select>
+        </label>
         <label>
           <span>Players</span>
           <select id="tracker-player-count">
@@ -470,18 +506,24 @@ export function renderTurnTracker(playerCount = 6): string {
               .join("")}
           </select>
         </label>
-        <label>
-          <span>Round</span>
-          <input id="tracker-round" type="number" min="1" value="1" />
-        </label>
-        <div class="tracker-button-row">
-          <button type="button" id="tracker-prev">Previous Turn</button>
-          <button type="button" id="tracker-next">Next Turn</button>
-          <button type="button" id="tracker-next-round">Next Round</button>
-          <button type="button" id="tracker-reset">Reset</button>
-        </div>
       </div>
       <div id="tracker-list" class="tracker-list">${rows}</div>
+      <section class="strategy-board-shell">
+        <div class="strategy-board-header">
+          <p class="eyebrow">Strategy Board</p>
+          <h3>Initiative Order</h3>
+        </div>
+        <p class="strategy-board-intro">Drag selected factions onto the initiative board. Active factions stay in the left lane; click <strong>Pass</strong> to move them to the right lane.</p>
+        <section class="tracker-pool-shell">
+          <div class="tracker-pool-head">
+            <h4>Unassigned Factions</h4>
+            <p>Factions appear here once selected and return here when you reset for a new round.</p>
+          </div>
+          <div id="tracker-pool" class="tracker-pool"></div>
+        </section>
+        <div id="strategy-board" class="strategy-board">${strategySlots}</div>
+        <div id="tracker-round-actions" class="tracker-round-actions"></div>
+      </section>
     </section>
   `;
 }
@@ -509,118 +551,316 @@ export function bindAppTabs(appRoot: HTMLElement): void {
 }
 
 export function bindTurnTracker(trackerRoot: HTMLElement): void {
+  const expansionField =
+    trackerRoot.querySelector<HTMLSelectElement>("#tracker-expansion");
   const playerCountField =
     trackerRoot.querySelector<HTMLSelectElement>("#tracker-player-count");
-  const roundField = trackerRoot.querySelector<HTMLInputElement>("#tracker-round");
-  const roundLabel =
-    trackerRoot.querySelector<HTMLElement>("#tracker-round-label");
-  const activeLabel =
-    trackerRoot.querySelector<HTMLElement>("#tracker-active-label");
   const trackerList = trackerRoot.querySelector<HTMLElement>("#tracker-list");
-  const previousButton =
-    trackerRoot.querySelector<HTMLButtonElement>("#tracker-prev");
-  const nextButton =
-    trackerRoot.querySelector<HTMLButtonElement>("#tracker-next");
-  const nextRoundButton =
-    trackerRoot.querySelector<HTMLButtonElement>("#tracker-next-round");
-  const resetButton =
-    trackerRoot.querySelector<HTMLButtonElement>("#tracker-reset");
+  const trackerPool = trackerRoot.querySelector<HTMLElement>("#tracker-pool");
+  const strategyBoard =
+    trackerRoot.querySelector<HTMLElement>("#strategy-board");
+  const roundActions = trackerRoot.querySelector<HTMLElement>(
+    "#tracker-round-actions",
+  );
 
   if (
+    !expansionField ||
     !playerCountField ||
-    !roundField ||
-    !roundLabel ||
-    !activeLabel ||
     !trackerList ||
-    !previousButton ||
-    !nextButton ||
-    !nextRoundButton ||
-    !resetButton
+    !trackerPool ||
+    !strategyBoard ||
+    !roundActions
   ) {
     return;
   }
 
-  let playerCount = Number.parseInt(playerCountField.value, 10) || 6;
-  let currentTurn = 0;
-  let names = Array.from({ length: playerCount }, (_, index) => `Player ${index + 1}`);
+  const state: TrackerState = {
+    expansion: expansionField.value as Mode,
+    playerCount: Number.parseInt(playerCountField.value, 10) || 6,
+    selectedFactions: Array.from(
+      { length: Number.parseInt(playerCountField.value, 10) || 6 },
+      () => "",
+    ),
+    assignments: {},
+    draggingFaction: null,
+  };
 
-  const updateSummary = () => {
-    roundLabel.textContent = String(Number.parseInt(roundField.value, 10) || 1);
-    activeLabel.textContent = names[currentTurn] ?? `Player ${currentTurn + 1}`;
+  const getSelectedFactions = () => state.selectedFactions.filter(Boolean);
+
+  const canAssignFactionToSlot = (faction: string, slot: number) => {
+    if (slot === 0) {
+      return faction === "The Naalu Collective";
+    }
+    return slot >= 1 && slot <= 8;
+  };
+
+  const clearFactionAssignment = (faction: string) => {
+    if (state.assignments[faction]) {
+      delete state.assignments[faction];
+    }
+  };
+
+  const getFactionAtSlot = (slot: number) =>
+    Object.entries(state.assignments).find(
+      ([, assignment]) => assignment.slot === slot,
+    )?.[0] ?? null;
+
+  const assignFactionToSlot = (faction: string, slot: number) => {
+    if (!faction || !canAssignFactionToSlot(faction, slot)) return;
+    const occupiedFaction = getFactionAtSlot(slot);
+    if (occupiedFaction && occupiedFaction !== faction) return;
+    clearFactionAssignment(faction);
+    state.assignments[faction] = { slot, passed: false };
+  };
+
+  const syncAssignmentsToSelections = () => {
+    const validSelections = new Set(getSelectedFactions());
+    for (const faction of Object.keys(state.assignments)) {
+      if (!validSelections.has(faction)) {
+        delete state.assignments[faction];
+      }
+    }
+  };
+
+  const renderDraggableFaction = (
+    faction: string,
+    assignment: TrackerAssignment | null = null,
+  ) => {
+    const passed = assignment?.passed ?? false;
+    return `
+      <div class="tracker-chip${passed ? " is-passed" : ""}" draggable="true" data-faction-name="${faction}">
+        <span class="tracker-chip-label">${faction}</span>
+        ${
+          assignment
+            ? `<button type="button" class="tracker-chip-action" data-pass-faction="${faction}">${passed ? "Unpass" : "Pass"}</button>`
+            : ""
+        }
+      </div>
+    `;
+  };
+
+  const bindDragSource = (element: HTMLElement, faction: string) => {
+    element.addEventListener("dragstart", (event) => {
+      state.draggingFaction = faction;
+      event.dataTransfer?.setData("text/plain", faction);
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+      }
+    });
+    element.addEventListener("dragend", () => {
+      state.draggingFaction = null;
+    });
+  };
+
+  const bindDropTarget = (element: HTMLElement, slot: number) => {
+    element.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      element.classList.add("is-over");
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "move";
+      }
+    });
+    element.addEventListener("dragleave", () => {
+      element.classList.remove("is-over");
+    });
+    element.addEventListener("drop", (event) => {
+      event.preventDefault();
+      element.classList.remove("is-over");
+      const faction =
+        event.dataTransfer?.getData("text/plain") || state.draggingFaction;
+      if (!faction) return;
+      assignFactionToSlot(faction, slot);
+      renderBoard();
+    });
   };
 
   const renderRows = () => {
-    trackerList.innerHTML = Array.from({ length: playerCount }, (_, index) => {
+    const availableFactions = factionsByMode[state.expansion] ?? [];
+    trackerList.innerHTML = Array.from(
+      { length: state.playerCount },
+      (_, index) => {
       const playerNumber = index + 1;
+      const selectedFaction = state.selectedFactions[index] ?? "";
+      const selectedByOthers = new Set(
+        state.selectedFactions.filter(
+          (faction, factionIndex) => factionIndex !== index && faction,
+        ),
+      );
+      const factionOptions = [
+        `<option value="">Select race</option>`,
+        ...availableFactions.map((faction) => {
+          const disabled =
+            selectedByOthers.has(faction) && faction !== selectedFaction;
+          return `<option value="${faction}"${faction === selectedFaction ? " selected" : ""}${disabled ? " disabled" : ""}>${faction}</option>`;
+        }),
+      ].join("");
       return `
-        <div class="tracker-row${index === currentTurn ? " is-active" : ""}" data-player-index="${index}">
+        <div class="tracker-row" data-player-index="${index}">
           <div class="tracker-row-main">
             <span class="tracker-seat">P${playerNumber}</span>
-            <input
-              class="tracker-name-input"
-              data-name-index="${index}"
-              type="text"
-              value="${names[index] ?? `Player ${playerNumber}`}"
-              aria-label="Player ${playerNumber} name"
-            />
+            <select class="tracker-faction-select" data-faction-index="${index}" aria-label="Player ${playerNumber} faction">
+              ${factionOptions}
+            </select>
           </div>
-          <button type="button" class="tracker-set-active" data-set-active="${index}">Set Active</button>
         </div>
       `;
-    }).join("");
+      },
+    ).join("");
 
-    for (const input of trackerList.querySelectorAll<HTMLInputElement>(".tracker-name-input")) {
-      input.addEventListener("input", () => {
-        const index = Number.parseInt(input.dataset.nameIndex ?? "0", 10);
-        names[index] = input.value || `Player ${index + 1}`;
-        updateSummary();
-      });
-    }
-
-    for (const button of trackerList.querySelectorAll<HTMLButtonElement>(".tracker-set-active")) {
-      button.addEventListener("click", () => {
-        currentTurn = Number.parseInt(button.dataset.setActive ?? "0", 10) || 0;
+    for (const select of trackerList.querySelectorAll<HTMLSelectElement>(".tracker-faction-select")) {
+      select.addEventListener("change", () => {
+        const index = Number.parseInt(select.dataset.factionIndex ?? "0", 10);
+        const previousFaction = state.selectedFactions[index];
+        state.selectedFactions[index] = select.value;
+        if (previousFaction && previousFaction !== select.value) {
+          clearFactionAssignment(previousFaction);
+        }
+        syncAssignmentsToSelections();
         renderRows();
-        updateSummary();
+        renderBoard();
       });
     }
   };
 
-  playerCountField.addEventListener("change", () => {
-    playerCount = Number.parseInt(playerCountField.value, 10) || 6;
-    names = Array.from({ length: playerCount }, (_, index) => names[index] ?? `Player ${index + 1}`);
-    currentTurn = Math.min(currentTurn, playerCount - 1);
+  const renderBoard = () => {
+    const selectedFactions = getSelectedFactions();
+    const unassignedFactions = selectedFactions.filter(
+      (faction) => !state.assignments[faction],
+    );
+    trackerPool.innerHTML = unassignedFactions.length
+      ? unassignedFactions
+          .map((faction) => renderDraggableFaction(faction))
+          .join("")
+      : `<p class="tracker-pool-empty">All selected factions are assigned to the board.</p>`;
+
+    for (const chip of trackerPool.querySelectorAll<HTMLElement>(".tracker-chip")) {
+      bindDragSource(chip, chip.dataset.factionName ?? "");
+    }
+
+    strategyBoard.innerHTML = Array.from({ length: 9 }, (_, index) => {
+      const slot = index;
+      const card = strategyCards.find((entry) => entry.initiative === slot);
+      const title = slot === 0 ? "Naalu Token" : card?.name ?? `Strategy Card ${slot}`;
+      const subtitle =
+        slot === 0
+          ? "Use this slot when The Naalu Collective claims initiative 0."
+          : `Strategy card ${slot}`;
+      const activeFaction =
+        Object.entries(state.assignments).find(
+          ([, assignment]) => assignment.slot === slot && !assignment.passed,
+        )?.[0] ?? null;
+      const passedFaction =
+        Object.entries(state.assignments).find(
+          ([, assignment]) => assignment.slot === slot && assignment.passed,
+        )?.[0] ?? null;
+      return `
+        <article class="strategy-slot strategy-slot-row" data-strategy-slot="${slot}">
+          <div class="strategy-number">${slot}</div>
+          <div class="strategy-copy">
+            <h3>${title}</h3>
+            <p>${subtitle}</p>
+          </div>
+          <div class="strategy-lanes">
+            <section class="strategy-lane strategy-lane-active" data-drop-slot="${slot}">
+              <header>Active</header>
+              <div class="strategy-lane-body">
+                ${
+                  activeFaction
+                    ? renderDraggableFaction(
+                        activeFaction,
+                        state.assignments[activeFaction] ?? null,
+                      )
+                    : `<p class="strategy-placeholder">${slot === 0 ? "Drop Naalu here" : "Drop faction here"}</p>`
+                }
+              </div>
+            </section>
+            <section class="strategy-lane strategy-lane-passed">
+              <header>Passed</header>
+              <div class="strategy-lane-body">
+                ${
+                  passedFaction
+                    ? renderDraggableFaction(
+                        passedFaction,
+                        state.assignments[passedFaction] ?? null,
+                      )
+                    : `<p class="strategy-placeholder">None</p>`
+                }
+              </div>
+            </section>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    for (const dropTarget of strategyBoard.querySelectorAll<HTMLElement>(
+      ".strategy-lane-active",
+    )) {
+      bindDropTarget(
+        dropTarget,
+        Number.parseInt(dropTarget.dataset.dropSlot ?? "0", 10),
+      );
+    }
+
+    for (const chip of strategyBoard.querySelectorAll<HTMLElement>(".tracker-chip")) {
+      bindDragSource(chip, chip.dataset.factionName ?? "");
+    }
+
+    for (const button of strategyBoard.querySelectorAll<HTMLButtonElement>(
+      ".tracker-chip-action",
+    )) {
+      button.addEventListener("click", () => {
+        const faction = button.dataset.passFaction ?? "";
+        const assignment = state.assignments[faction];
+        if (!assignment) return;
+        assignment.passed = !assignment.passed;
+        renderBoard();
+      });
+    }
+
+    const everyonePassed =
+      selectedFactions.length > 0 &&
+      selectedFactions.every((faction) => state.assignments[faction]?.passed);
+    roundActions.innerHTML = everyonePassed
+      ? `<button type="button" id="tracker-reset-round" class="tracker-reset-button">Reset for Next Round</button>`
+      : "";
+
+    const resetButton =
+      roundActions.querySelector<HTMLButtonElement>("#tracker-reset-round");
+    resetButton?.addEventListener("click", () => {
+      state.assignments = {};
+      renderBoard();
+    });
+  };
+
+  expansionField.addEventListener("change", () => {
+    state.expansion = expansionField.value as Mode;
+    state.selectedFactions = Array.from(
+      { length: state.playerCount },
+      (_, index) =>
+        factionsByMode[state.expansion]?.includes(
+          state.selectedFactions[index] ?? "",
+        )
+          ? (state.selectedFactions[index] ?? "")
+          : "",
+    );
+    syncAssignmentsToSelections();
     renderRows();
-    updateSummary();
+    renderBoard();
   });
 
-  roundField.addEventListener("input", updateSummary);
-  previousButton.addEventListener("click", () => {
-    currentTurn = (currentTurn - 1 + playerCount) % playerCount;
+  playerCountField.addEventListener("change", () => {
+    state.playerCount = Number.parseInt(playerCountField.value, 10) || 6;
+    state.selectedFactions = Array.from(
+      { length: state.playerCount },
+      (_, index) => state.selectedFactions[index] ?? "",
+    );
+    syncAssignmentsToSelections();
     renderRows();
-    updateSummary();
-  });
-  nextButton.addEventListener("click", () => {
-    currentTurn = (currentTurn + 1) % playerCount;
-    renderRows();
-    updateSummary();
-  });
-  nextRoundButton.addEventListener("click", () => {
-    roundField.value = String((Number.parseInt(roundField.value, 10) || 1) + 1);
-    currentTurn = 0;
-    renderRows();
-    updateSummary();
-  });
-  resetButton.addEventListener("click", () => {
-    roundField.value = "1";
-    currentTurn = 0;
-    names = Array.from({ length: playerCount }, (_, index) => `Player ${index + 1}`);
-    renderRows();
-    updateSummary();
+    renderBoard();
   });
 
   renderRows();
-  updateSummary();
+  renderBoard();
 }
 
 export type AppDependencies = {
