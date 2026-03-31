@@ -117,6 +117,7 @@ export function renderHyperlaneGlyph(
   tile: BoardTile,
   cx: number,
   cy: number,
+  labelTransform = "",
 ): string {
   const pairs = tile.connections ?? [
     [0, 3],
@@ -140,7 +141,7 @@ export function renderHyperlaneGlyph(
     .join("");
 
   const label = tile.hyperlaneId
-    ? `<text x="${cx}" y="${cy + 18}" text-anchor="middle" font-size="8" font-weight="700" fill="#f5efe0">${tile.hyperlaneId}</text>`
+    ? `<text x="${cx}" y="${cy + 18}" text-anchor="middle" font-size="8" font-weight="700" fill="#ffcf70" stroke="#09111d" stroke-width="0.8" paint-order="stroke fill"${labelTransform}>${tile.hyperlaneId}</text>`
     : "";
   return `<g${rotationTransform(cx, cy, tile.rotation)}>${paths}${label}</g>`;
 }
@@ -150,9 +151,15 @@ export function renderBoardPreview(
   players: number,
   setup: string,
   layouts: LayoutFile = layoutFile,
+  boardRotation = 0,
 ): string {
   const layout = getLayoutDefinition(mode, players, setup, layouts);
   const captions = [`${mode} mode`, `${players} players`, `${setup} layout`];
+  const boardRotationDegrees = boardRotation * 30;
+  const rotationOptions = Array.from({ length: 12 }, (_, step) => {
+    const degrees = step * 30;
+    return `<option value="${step}"${step === boardRotation ? " selected" : ""}>${degrees}&deg;</option>`;
+  }).join("");
   if (!layout) {
     return `
       <section class="preview-card">
@@ -160,6 +167,10 @@ export function renderBoardPreview(
           <p class="eyebrow">Board Layout Preview</p>
           <h3>No JSON layout configured yet</h3>
           <p>Add this configuration to <code>src/layouts.json</code> to draw the board for this selection.</p>
+          <label class="preview-control">
+            <span>Board Rotation</span>
+            <select id="board-rotation">${rotationOptions}</select>
+          </label>
           <div class="preview-tags">${captions.map((caption) => `<span>${caption}</span>`).join("")}</div>
         </div>
       </section>
@@ -174,12 +185,25 @@ export function renderBoardPreview(
     const y = size * 1.5 * tile.r;
     return { ...tile, x, y };
   });
-  const minX = Math.min(...positioned.map((tile) => tile.x));
-  const maxX = Math.max(...positioned.map((tile) => tile.x));
-  const minY = Math.min(...positioned.map((tile) => tile.y));
-  const maxY = Math.max(...positioned.map((tile) => tile.y));
-  const width = maxX - minX + margin * 2;
-  const height = maxY - minY + margin * 2;
+  const minX = positioned.length
+    ? Math.min(...positioned.map((tile) => tile.x))
+    : 0;
+  const maxX = positioned.length
+    ? Math.max(...positioned.map((tile) => tile.x))
+    : 0;
+  const minY = positioned.length
+    ? Math.min(...positioned.map((tile) => tile.y))
+    : 0;
+  const maxY = positioned.length
+    ? Math.max(...positioned.map((tile) => tile.y))
+    : 0;
+  const boardCenterX = (minX + maxX) / 2;
+  const boardCenterY = (minY + maxY) / 2;
+  const halfSpanX = (maxX - minX) / 2 + size + margin;
+  const halfSpanY = (maxY - minY) / 2 + size + margin;
+  const halfSpan = Math.max(halfSpanX, halfSpanY, size + margin);
+  const width = halfSpan * 2;
+  const height = halfSpan * 2;
 
   const points = (cx: number, cy: number) =>
     Array.from({ length: 6 }, (_, index) => {
@@ -188,7 +212,7 @@ export function renderBoardPreview(
     }).join(" ");
 
   const fills: Record<BoardTileKind, string> = {
-    red: "#ffcf70",
+    red: "#ff8d86",
     blue: "#88b6ff",
     blue1: "#cfe1ff",
     blue2: "#88b6ff",
@@ -197,6 +221,10 @@ export function renderBoardPreview(
     green: "#59c17d",
     hyperlane: "#2d3b59",
   };
+  const textTransform = (cx: number, cy: number) =>
+    boardRotationDegrees === 0
+      ? ""
+      : ` transform="rotate(${-boardRotationDegrees} ${cx} ${cy})"`;
 
   return `
     <section class="preview-card">
@@ -204,6 +232,10 @@ export function renderBoardPreview(
         <p class="eyebrow">Board Layout Preview</p>
         <h3>${layout.title}</h3>
         <p>${describeSetupVariant(mode, players, setup)}</p>
+        <label class="preview-control">
+          <span>Board Rotation</span>
+          <select id="board-rotation">${rotationOptions}</select>
+        </label>
         <div class="preview-tags">${captions.map((caption) => `<span>${caption}</span>`).join("")}</div>
         <div class="preview-legend">
           <span><i class="legend-swatch green"></i>Green: home system</span>
@@ -214,27 +246,33 @@ export function renderBoardPreview(
       </div>
       <svg class="board-preview" viewBox="0 0 ${width} ${height}" role="img" aria-label="Board layout preview for ${players} player ${setup} configuration">
         <rect x="0" y="0" width="${width}" height="${height}" rx="24" fill="rgba(255,255,255,0.03)" />
-        ${positioned
-          .map((tile) => {
-            const cx = tile.x - minX + margin;
-            const cy = tile.y - minY + margin;
-            const textColor = tile.kind === "red" ? "#09111d" : "#f5efe0";
-            const primaryLabel = tile.label
-              ? `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="10" font-weight="700" fill="${textColor}">${tile.label}</text>`
-              : "";
-            const secondaryLabel =
-              tile.kind === "hyperlane" && tile.label
-                ? `<text x="${cx}" y="${cy - 8}" text-anchor="middle" font-size="7" font-weight="700" fill="#f5efe0">${tile.label}</text>`
+        <g transform="rotate(${boardRotationDegrees} ${width / 2} ${height / 2})">
+          ${positioned
+            .map((tile) => {
+              const cx = tile.x - boardCenterX + width / 2;
+              const cy = tile.y - boardCenterY + height / 2;
+              const textColor = tile.kind === "red" ? "#09111d" : "#f5efe0";
+              const primaryLabel = tile.label
+                ? `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="10" font-weight="700" fill="${textColor}"${textTransform(cx, cy)}>${tile.label}</text>`
                 : "";
-            return `
-              <g>
-                <polygon points="${points(cx, cy)}" fill="${fills[tile.kind]}" stroke="rgba(255,255,255,0.2)" stroke-width="2" />
-                ${tile.kind === "hyperlane" ? renderHyperlaneGlyph(tile, cx, cy) : ""}
-                ${tile.kind === "hyperlane" ? secondaryLabel : primaryLabel}
-              </g>
-            `;
-          })
-          .join("")}
+              const secondaryLabel =
+                tile.kind === "hyperlane" && tile.label
+                  ? `<text x="${cx}" y="${cy - 8}" text-anchor="middle" font-size="7" font-weight="700" fill="#f5efe0"${textTransform(cx, cy)}>${tile.label}</text>`
+                  : "";
+              const hyperlaneGlyph =
+                tile.kind === "hyperlane"
+                  ? renderHyperlaneGlyph(tile, cx, cy, textTransform(cx, cy))
+                  : "";
+              return `
+                <g>
+                  <polygon points="${points(cx, cy)}" fill="${fills[tile.kind]}" stroke="rgba(255,255,255,0.2)" stroke-width="2" />
+                  ${hyperlaneGlyph}
+                  ${tile.kind === "hyperlane" ? secondaryLabel : primaryLabel}
+                </g>
+              `;
+            })
+            .join("")}
+        </g>
       </svg>
     </section>
   `;
@@ -396,6 +434,7 @@ export type AppDependencies = {
 export type InitializedApp = {
   refreshSetups: () => void;
   generate: () => void;
+  renderPreview: () => void;
   resultsView: HTMLElement;
   layoutPreviewView: HTMLElement;
 };
@@ -499,6 +538,28 @@ export function initializeApp(
   const deckForm = form;
   const resultsView = results;
   const layoutPreviewView = layoutPreview;
+  let boardRotation = 0;
+
+  function bindPreviewRotationControl(): void {
+    const rotationField =
+      layoutPreviewView.querySelector<HTMLSelectElement>("#board-rotation");
+    if (!rotationField) return;
+    rotationField.addEventListener("change", () => {
+      boardRotation = Number.parseInt(rotationField.value, 10) || 0;
+      renderPreview();
+    });
+  }
+
+  function renderPreview(): void {
+    layoutPreviewView.innerHTML = renderBoardPreview(
+      modeField.value as Mode,
+      Number.parseInt(playersField.value, 10),
+      setupField.value,
+      layoutFile,
+      boardRotation,
+    );
+    bindPreviewRotationControl();
+  }
 
   function refreshSetups(): void {
     const players = Number.parseInt(playersField.value, 10);
@@ -509,11 +570,7 @@ export function initializeApp(
       .map((option) => `<option value="${option}">${option}</option>`)
       .join("");
     setupField.value = options.includes(fallback) ? fallback : options[0];
-    layoutPreviewView.innerHTML = renderBoardPreview(
-      mode,
-      players,
-      setupField.value,
-    );
+    renderPreview();
   }
 
   function generate(): void {
@@ -551,19 +608,11 @@ export function initializeApp(
         );
       }
 
-      layoutPreviewView.innerHTML = renderBoardPreview(
-        modeField.value as Mode,
-        baseOptions.players,
-        baseOptions.setup,
-      );
+      renderPreview();
       resultsView.innerHTML = renderResult(result);
       bindResultTabs(resultsView);
     } catch (error) {
-      layoutPreviewView.innerHTML = renderBoardPreview(
-        modeField.value as Mode,
-        Number.parseInt(playersField.value, 10),
-        setupField.value,
-      );
+      renderPreview();
       resultsView.innerHTML = `<p class="error-card">${error instanceof Error ? error.message : String(error)}</p>`;
     }
   }
@@ -585,7 +634,13 @@ export function initializeApp(
   refreshSetups();
   generate();
 
-  return { refreshSetups, generate, resultsView, layoutPreviewView };
+  return {
+    refreshSetups,
+    generate,
+    renderPreview,
+    resultsView,
+    layoutPreviewView,
+  };
 }
 
 if (typeof document !== "undefined" && document.querySelector("#app")) {
