@@ -297,6 +297,8 @@ describe("app helpers", () => {
     expect(html).toContain("Turn Order Tracker");
     expect(html).toContain('id="tracker-expansion"');
     expect(html).toContain('id="tracker-player-count"');
+    expect(html).toContain("Faction Setup");
+    expect(html).toContain('id="tracker-speaker"');
     expect(html).toContain("Select race");
     expect(html).toContain("Strategy Board");
     expect(html).toContain("Naalu Token");
@@ -358,6 +360,14 @@ describe("app helpers", () => {
     playerCount!.dispatchEvent(new Event("change", { bubbles: true }));
     expect(host.querySelectorAll(".tracker-row")).toHaveLength(3);
     expect(host.querySelectorAll(".strategy-slot")).toHaveLength(9);
+
+    const trackerTabs = host.querySelectorAll<HTMLButtonElement>(".tracker-tab");
+    trackerTabs[1].click();
+    expect(trackerTabs[1].classList.contains("is-active")).toBe(true);
+    expect(
+      host.querySelector<HTMLElement>('[data-tracker-tab-panel="factions"]')
+        ?.hidden,
+    ).toBe(true);
   });
 
   it("drags factions onto the strategy board, passes them, and resets the round", () => {
@@ -377,6 +387,16 @@ describe("app helpers", () => {
       select!.value = faction;
       select!.dispatchEvent(new Event("change", { bubbles: true }));
     }
+
+    const speaker = host.querySelector<HTMLSelectElement>("#tracker-speaker");
+    speaker!.value = "1";
+    speaker!.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const poolChipsBefore = Array.from(
+      host.querySelectorAll<HTMLElement>("#tracker-pool .tracker-chip"),
+    );
+    expect(poolChipsBefore[0]?.dataset.factionName).toBe("The Arborec");
+    expect(poolChipsBefore[0]?.classList.contains("is-speaker")).toBe(true);
 
     const dragToSlot = (faction: string, slot: number) => {
       const chip = Array.from(
@@ -455,6 +475,15 @@ describe("app helpers", () => {
 
     expect(host.querySelector("#tracker-reset-round")).toBeNull();
     expect(host.querySelectorAll("#tracker-pool .tracker-chip")).toHaveLength(3);
+    const poolChipsAfter = Array.from(
+      host.querySelectorAll<HTMLElement>("#tracker-pool .tracker-chip"),
+    );
+    expect(poolChipsAfter.map((chip) => chip.dataset.factionName)).toEqual([
+      "The Arborec",
+      "The Naalu Collective",
+      "The Federation of Sol",
+    ]);
+    expect(poolChipsAfter[0]?.classList.contains("is-speaker")).toBe(true);
     expect(host.textContent).toContain("Drop faction here");
   });
 

@@ -87,6 +87,7 @@ type TrackerState = {
   selectedFactions: string[];
   assignments: Record<string, TrackerAssignment>;
   draggingFaction: string | null;
+  speakerSeat: number;
 };
 
 export function getLayoutDefinition(
@@ -469,13 +470,13 @@ export function renderTurnTracker(playerCount = 6): string {
   const strategySlots = Array.from({ length: 9 }, (_, index) => {
     const value = index;
     const card = strategyCards.find((entry) => entry.initiative === value);
-    const label = value === 0 ? "Naalu Token" : card?.name ?? `Strategy Card ${value}`;
+    const label =
+      value === 0 ? "Naalu Token" : card?.name ?? `Strategy Card ${value}`;
     return `
       <article class="strategy-slot" data-strategy-slot="${value}">
         <div class="strategy-number">${value}</div>
         <div class="strategy-copy">
           <h3>${label}</h3>
-          <p>${value === 0 ? "Reserved for the Naalu initiative token." : `Strategy card ${value}.`}</p>
         </div>
       </article>
     `;
@@ -487,42 +488,61 @@ export function renderTurnTracker(playerCount = 6): string {
         <div>
           <p class="eyebrow">Turn Order Tracker</p>
           <h2>Set the factions at the table, then track strategy cards in initiative order.</h2>
-          <p class="lede">Choose the expansion, set the seat count, and assign each player a unique faction. The strategy board below is laid out from the Naalu zero position through strategy cards 1 to 8.</p>
+          <p class="lede">Choose the expansion, assign each player a unique faction, then switch to the strategy board to manage initiative, passing, and round resets.</p>
         </div>
       </div>
-      <div class="tracker-controls">
-        <label>
-          <span>Expansion</span>
-          <select id="tracker-expansion">${expansionOptions}</select>
-        </label>
-        <label>
-          <span>Players</span>
-          <select id="tracker-player-count">
-            ${Array.from({ length: 6 }, (_, index) => index + 3)
-              .map(
-                (count) =>
-                  `<option value="${count}"${count === playerCount ? " selected" : ""}>${count}</option>`,
-              )
-              .join("")}
-          </select>
-        </label>
+      <div class="tracker-tabs" role="tablist" aria-label="Tracker views">
+        <button type="button" class="tracker-tab is-active" data-tracker-tab-target="factions" aria-selected="true">Faction Setup</button>
+        <button type="button" class="tracker-tab" data-tracker-tab-target="strategy" aria-selected="false">Strategy Board</button>
       </div>
-      <div id="tracker-list" class="tracker-list">${rows}</div>
-      <section class="strategy-board-shell">
-        <div class="strategy-board-header">
-          <p class="eyebrow">Strategy Board</p>
-          <h3>Initiative Order</h3>
+      <section class="tracker-pane is-active" data-tracker-tab-panel="factions">
+        <div class="tracker-controls">
+          <label>
+            <span>Expansion</span>
+            <select id="tracker-expansion">${expansionOptions}</select>
+          </label>
+          <label>
+            <span>Players</span>
+            <select id="tracker-player-count">
+              ${Array.from({ length: 6 }, (_, index) => index + 3)
+                .map(
+                  (count) =>
+                    `<option value="${count}"${count === playerCount ? " selected" : ""}>${count}</option>`,
+                )
+                .join("")}
+            </select>
+          </label>
         </div>
-        <p class="strategy-board-intro">Drag selected factions onto the initiative board. Active factions stay in the left lane; click <strong>Pass</strong> to move them to the right lane.</p>
-        <section class="tracker-pool-shell">
-          <div class="tracker-pool-head">
-            <h4>Unassigned Factions</h4>
-            <p>Factions appear here once selected and return here when you reset for a new round.</p>
+        <div id="tracker-list" class="tracker-list">${rows}</div>
+      </section>
+      <section class="tracker-pane" data-tracker-tab-panel="strategy" hidden>
+        <section class="strategy-board-shell">
+          <div class="strategy-board-header">
+            <p class="eyebrow">Strategy Board</p>
+            <h3>Initiative Order</h3>
           </div>
-          <div id="tracker-pool" class="tracker-pool"></div>
+          <p class="strategy-board-intro">Drag selected factions onto the initiative board. Active factions stay in the left lane; click <strong>Pass</strong> to move them to the right lane.</p>
+          <div class="strategy-toolbar">
+            <label class="strategy-toolbar-field">
+              <span>Speaker</span>
+              <select id="tracker-speaker"></select>
+            </label>
+          </div>
+          <section class="tracker-pool-shell">
+            <div class="tracker-pool-head">
+              <h4>Unassigned Factions</h4>
+              <p>Unassigned factions are shown in player order, starting with the speaker. Speaker is highlighted.</p>
+            </div>
+            <div id="tracker-pool" class="tracker-pool"></div>
+          </section>
+          <div class="strategy-board-columns" aria-hidden="true">
+            <span class="strategy-board-column-label strategy-board-column-label-card">Card</span>
+            <span class="strategy-board-column-label">Active</span>
+            <span class="strategy-board-column-label">Passed</span>
+          </div>
+          <div id="strategy-board" class="strategy-board">${strategySlots}</div>
+          <div id="tracker-round-actions" class="tracker-round-actions"></div>
         </section>
-        <div id="strategy-board" class="strategy-board">${strategySlots}</div>
-        <div id="tracker-round-actions" class="tracker-round-actions"></div>
       </section>
     </section>
   `;
@@ -551,10 +571,16 @@ export function bindAppTabs(appRoot: HTMLElement): void {
 }
 
 export function bindTurnTracker(trackerRoot: HTMLElement): void {
+  const trackerTabs =
+    trackerRoot.querySelectorAll<HTMLButtonElement>(".tracker-tab");
+  const trackerPanes =
+    trackerRoot.querySelectorAll<HTMLElement>(".tracker-pane");
   const expansionField =
     trackerRoot.querySelector<HTMLSelectElement>("#tracker-expansion");
   const playerCountField =
     trackerRoot.querySelector<HTMLSelectElement>("#tracker-player-count");
+  const speakerField =
+    trackerRoot.querySelector<HTMLSelectElement>("#tracker-speaker");
   const trackerList = trackerRoot.querySelector<HTMLElement>("#tracker-list");
   const trackerPool = trackerRoot.querySelector<HTMLElement>("#tracker-pool");
   const strategyBoard =
@@ -566,6 +592,7 @@ export function bindTurnTracker(trackerRoot: HTMLElement): void {
   if (
     !expansionField ||
     !playerCountField ||
+    !speakerField ||
     !trackerList ||
     !trackerPool ||
     !strategyBoard ||
@@ -583,9 +610,45 @@ export function bindTurnTracker(trackerRoot: HTMLElement): void {
     ),
     assignments: {},
     draggingFaction: null,
+    speakerSeat: 0,
   };
 
+  for (const button of trackerTabs) {
+    button.addEventListener("click", () => {
+      const target = button.dataset.trackerTabTarget;
+      for (const tabButton of trackerTabs) {
+        const active = tabButton === button;
+        tabButton.classList.toggle("is-active", active);
+        tabButton.setAttribute("aria-selected", active ? "true" : "false");
+      }
+      for (const pane of trackerPanes) {
+        const active = pane.dataset.trackerTabPanel === target;
+        pane.hidden = !active;
+        pane.classList.toggle("is-active", active);
+      }
+    });
+  }
+
   const getSelectedFactions = () => state.selectedFactions.filter(Boolean);
+  const getSpeakerFaction = () => state.selectedFactions[state.speakerSeat] ?? "";
+  const getFactionSeat = (faction: string) => state.selectedFactions.indexOf(faction);
+  const getSpeakerOrderedFactions = () => {
+    const factionsWithSeats = state.selectedFactions
+      .map((faction, index) => ({ faction, index }))
+      .filter((entry) => entry.faction);
+    if (!factionsWithSeats.length) return [];
+    return factionsWithSeats
+      .sort((left, right) => {
+        const leftOffset =
+          (left.index - state.speakerSeat + state.playerCount) %
+          state.playerCount;
+        const rightOffset =
+          (right.index - state.speakerSeat + state.playerCount) %
+          state.playerCount;
+        return leftOffset - rightOffset;
+      })
+      .map((entry) => entry.faction);
+  };
 
   const canAssignFactionToSlot = (faction: string, slot: number) => {
     if (slot === 0) {
@@ -627,9 +690,12 @@ export function bindTurnTracker(trackerRoot: HTMLElement): void {
     assignment: TrackerAssignment | null = null,
   ) => {
     const passed = assignment?.passed ?? false;
+    const speaker = faction === getSpeakerFaction();
+    const seat = getFactionSeat(faction);
     return `
-      <div class="tracker-chip${passed ? " is-passed" : ""}" draggable="true" data-faction-name="${faction}">
+      <div class="tracker-chip${passed ? " is-passed" : ""}${speaker ? " is-speaker" : ""}" draggable="true" data-faction-name="${faction}">
         <span class="tracker-chip-label">${faction}</span>
+        <span class="tracker-chip-seat">P${seat + 1}</span>
         ${
           assignment
             ? `<button type="button" class="tracker-chip-action" data-pass-faction="${faction}">${passed ? "Unpass" : "Pass"}</button>`
@@ -722,9 +788,41 @@ export function bindTurnTracker(trackerRoot: HTMLElement): void {
     }
   };
 
+  const renderSpeakerOptions = () => {
+    speakerField.innerHTML = state.selectedFactions
+      .map((faction, index) => ({
+        faction,
+        index,
+      }))
+      .filter((entry) => entry.faction)
+      .map(
+        (entry) =>
+          `<option value="${entry.index}"${entry.index === state.speakerSeat ? " selected" : ""}>P${entry.index + 1} - ${entry.faction}</option>`,
+      )
+      .join("");
+
+    if (!speakerField.innerHTML) {
+      speakerField.innerHTML = `<option value="0">Select factions first</option>`;
+      speakerField.disabled = true;
+      state.speakerSeat = 0;
+      return;
+    }
+
+    if (!state.selectedFactions[state.speakerSeat]) {
+      const fallbackSpeaker = state.selectedFactions.findIndex((faction) =>
+        Boolean(faction),
+      );
+      state.speakerSeat = fallbackSpeaker >= 0 ? fallbackSpeaker : 0;
+    }
+    speakerField.disabled = false;
+    speakerField.value = String(state.speakerSeat);
+  };
+
   const renderBoard = () => {
+    renderSpeakerOptions();
+
     const selectedFactions = getSelectedFactions();
-    const unassignedFactions = selectedFactions.filter(
+    const unassignedFactions = getSpeakerOrderedFactions().filter(
       (faction) => !state.assignments[faction],
     );
     trackerPool.innerHTML = unassignedFactions.length
@@ -741,10 +839,6 @@ export function bindTurnTracker(trackerRoot: HTMLElement): void {
       const slot = index;
       const card = strategyCards.find((entry) => entry.initiative === slot);
       const title = slot === 0 ? "Naalu Token" : card?.name ?? `Strategy Card ${slot}`;
-      const subtitle =
-        slot === 0
-          ? "Use this slot when The Naalu Collective claims initiative 0."
-          : `Strategy card ${slot}`;
       const activeFaction =
         Object.entries(state.assignments).find(
           ([, assignment]) => assignment.slot === slot && !assignment.passed,
@@ -758,36 +852,31 @@ export function bindTurnTracker(trackerRoot: HTMLElement): void {
           <div class="strategy-number">${slot}</div>
           <div class="strategy-copy">
             <h3>${title}</h3>
-            <p>${subtitle}</p>
           </div>
-          <div class="strategy-lanes">
-            <section class="strategy-lane strategy-lane-active" data-drop-slot="${slot}">
-              <header>Active</header>
-              <div class="strategy-lane-body">
-                ${
-                  activeFaction
-                    ? renderDraggableFaction(
-                        activeFaction,
-                        state.assignments[activeFaction] ?? null,
-                      )
-                    : `<p class="strategy-placeholder">${slot === 0 ? "Drop Naalu here" : "Drop faction here"}</p>`
-                }
-              </div>
-            </section>
-            <section class="strategy-lane strategy-lane-passed">
-              <header>Passed</header>
-              <div class="strategy-lane-body">
-                ${
-                  passedFaction
-                    ? renderDraggableFaction(
-                        passedFaction,
-                        state.assignments[passedFaction] ?? null,
-                      )
-                    : `<p class="strategy-placeholder">None</p>`
-                }
-              </div>
-            </section>
-          </div>
+          <section class="strategy-lane strategy-lane-active" data-drop-slot="${slot}">
+            <div class="strategy-lane-body">
+              ${
+                activeFaction
+                  ? renderDraggableFaction(
+                      activeFaction,
+                      state.assignments[activeFaction] ?? null,
+                    )
+                  : `<p class="strategy-placeholder">${slot === 0 ? "Drop Naalu here" : "Drop faction here"}</p>`
+              }
+            </div>
+          </section>
+          <section class="strategy-lane strategy-lane-passed">
+            <div class="strategy-lane-body">
+              ${
+                passedFaction
+                  ? renderDraggableFaction(
+                      passedFaction,
+                      state.assignments[passedFaction] ?? null,
+                    )
+                  : `<p class="strategy-placeholder">None</p>`
+              }
+            </div>
+          </section>
         </article>
       `;
     }).join("");
@@ -856,6 +945,11 @@ export function bindTurnTracker(trackerRoot: HTMLElement): void {
     );
     syncAssignmentsToSelections();
     renderRows();
+    renderBoard();
+  });
+
+  speakerField.addEventListener("change", () => {
+    state.speakerSeat = Number.parseInt(speakerField.value, 10) || 0;
     renderBoard();
   });
 
