@@ -1,16 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  applyTrackerSharedState,
   bindAppTabs,
   bindResultTabs,
   bindTurnTracker,
+  buildTrackerExportPayload,
+  generateTrackerRoomCode,
   describeSetupVariant,
   getLayoutDefinition,
+  getTrackerSharedState,
   initializeApp,
+  parseTrackerImportPayload,
   renderBoardPreview,
   renderHyperlaneGlyph,
   renderResult,
   renderTurnTracker,
+  resolvePartyKitHost,
   rotationTransform,
+  type TrackerSocketLike,
   type AppDependencies,
   type BoardTile,
   type LayoutFile,
@@ -123,8 +130,41 @@ function makeDataTransfer() {
   };
 }
 
+class FakeTrackerSocket implements TrackerSocketLike {
+  listeners = new Map<string, Array<(event: Event | MessageEvent<string>) => void>>();
+
+  sent: string[] = [];
+
+  closed = false;
+
+  addEventListener(
+    type: string,
+    listener: (event: Event | MessageEvent<string>) => void,
+  ) {
+    const listeners = this.listeners.get(type) ?? [];
+    listeners.push(listener);
+    this.listeners.set(type, listeners);
+  }
+
+  close() {
+    this.closed = true;
+    this.emit("close", new Event("close"));
+  }
+
+  send(message: string) {
+    this.sent.push(message);
+  }
+
+  emit(type: string, event: Event | MessageEvent<string>) {
+    for (const listener of this.listeners.get(type) ?? []) {
+      listener(event);
+    }
+  }
+}
+
 beforeEach(() => {
   document.body.innerHTML = "";
+  window.history.replaceState({}, "", window.location.pathname);
 });
 
 describe("app helpers", () => {
@@ -295,16 +335,66 @@ describe("app helpers", () => {
   it("renders a turn tracker shell", () => {
     const html = renderTurnTracker(4);
     expect(html).toContain("Turn Order Tracker");
+    expect(html).toContain("Shared Room");
+    expect(html).toContain('id="tracker-room-code"');
     expect(html).toContain('id="tracker-expansion"');
     expect(html).toContain('id="tracker-player-count"');
     expect(html).toContain("Faction Setup");
     expect(html).toContain('id="tracker-speaker"');
+    expect(html).toContain("Import / Export");
+    expect(html).toContain('id="tracker-transfer-json"');
     expect(html).toContain("Select race");
     expect(html).toContain("Strategy Board");
     expect(html).toContain("Naalu Token");
     expect(html).toContain("Leadership");
     expect(html).toContain("Imperial");
     expect(html).toContain("Unassigned Factions");
+  });
+
+  it("serializes and reapplies shared tracker state", () => {
+    const state = {
+      expansion: "pok",
+      playerCount: 3,
+      selectedFactions: ["The Federation of Sol", "", "The Naalu Collective"],
+      assignments: {
+        "The Federation of Sol": { slot: 1, passed: false },
+      },
+      draggingFaction: null,
+      speakerSeat: 2,
+    } as const;
+    const snapshot = getTrackerSharedState(state);
+    expect(snapshot.playerCount).toBe(3);
+
+    const target = {
+      expansion: "base",
+      playerCount: 6,
+      selectedFactions: ["", "", "", "", "", ""],
+      assignments: {},
+      draggingFaction: null,
+      speakerSeat: 0,
+    };
+    applyTrackerSharedState(target, snapshot);
+    expect(target.expansion).toBe("pok");
+    expect(target.speakerSeat).toBe(2);
+    expect(target.assignments["The Federation of Sol"]?.slot).toBe(1);
+  });
+
+  it("builds and parses export payloads", () => {
+    const payload = buildTrackerExportPayload({
+      expansion: "pok",
+      playerCount: 3,
+      selectedFactions: ["The Federation of Sol", "The Arborec", ""],
+      assignments: { "The Federation of Sol": { slot: 1, passed: true } },
+      draggingFaction: null,
+      speakerSeat: 1,
+    });
+    expect(payload.version).toBe(1);
+    expect(parseTrackerImportPayload(JSON.stringify(payload)).speakerSeat).toBe(1);
+  });
+
+  it("exposes default room helpers", () => {
+    expect(generateTrackerRoomCode()).toHaveLength(8);
+    expect(resolvePartyKitHost()).toBe("localhost:1999");
   });
 
   it("switches the top-level app tabs", () => {
@@ -485,6 +575,130 @@ describe("app helpers", () => {
     ]);
     expect(poolChipsAfter[0]?.classList.contains("is-speaker")).toBe(true);
     expect(host.textContent).toContain("Drop faction here");
+  });
+
+  it("joins a shared room and applies remote snapshots", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    const socket = new FakeTrackerSocket();
+    const socketFactory = vi.fn(async () => socket);
+    bindTurnTracker(host, socketFactory);
+
+    const roomCode = host.querySelector<HTMLInputElement>("#tracker-room-code");
+    roomCode!.value = "table42";
+    host
+      .querySelector<HTMLButtonElement>("#tracker-join-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+
+    await Promise.resolve();
+    expect(socketFactory).toHaveBeenCalledWith("table42");
+
+    socket.emit("open", new Event("open"));
+    expect(socket.sent[0]).toContain('"type":"hello"');
+
+    socket.emit(
+      "message",
+      new MessageEvent("message", {
+        data: JSON.stringify({
+          type: "snapshot",
+          state: {
+            expansion: "pok",
+            playerCount: 3,
+            selectedFactions: [
+              "The Federation of Sol",
+              "The Arborec",
+              "The Naalu Collective",
+            ],
+            assignments: {
+              "The Federation of Sol": { slot: 1, passed: false },
+            },
+            speakerSeat: 1,
+          },
+        }),
+      }),
+    );
+    socket.emit(
+      "message",
+      new MessageEvent("message", {
+        data: JSON.stringify({ type: "presence", connections: 3 }),
+      }),
+    );
+
+    expect(host.textContent).toContain("Shared room TABLE42");
+    expect(host.textContent).toContain("3 connected");
+    expect(
+      host.querySelector<HTMLSelectElement>('[data-faction-index="0"]')?.value,
+    ).toBe("The Federation of Sol");
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="1"] [data-faction-name="The Federation of Sol"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      host.querySelector("#tracker-pool .tracker-chip.is-speaker"),
+    ).not.toBeNull();
+  });
+
+  it("exports and reimports tracker state into a fresh shared room", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    const sockets: FakeTrackerSocket[] = [];
+    const socketFactory = vi.fn(async () => {
+      const socket = new FakeTrackerSocket();
+      sockets.push(socket);
+      return socket;
+    });
+    bindTurnTracker(host, socketFactory);
+
+    const selects = [
+      "The Federation of Sol",
+      "The Arborec",
+      "The Naalu Collective",
+    ];
+    for (const [index, faction] of selects.entries()) {
+      const select = host.querySelector<HTMLSelectElement>(
+        `[data-faction-index="${index}"]`,
+      );
+      select!.value = faction;
+      select!.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    host.querySelector<HTMLSelectElement>("#tracker-speaker")!.value = "2";
+    host
+      .querySelector<HTMLSelectElement>("#tracker-speaker")!
+      .dispatchEvent(new Event("change", { bubbles: true }));
+
+    host
+      .querySelector<HTMLButtonElement>("#tracker-export-state")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    const transferField = host.querySelector<HTMLTextAreaElement>(
+      "#tracker-transfer-json",
+    )!;
+    expect(transferField.value).toContain('"version": 1');
+    expect(transferField.value).toContain("The Naalu Collective");
+
+    const randomUuidSpy = vi
+      .spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValue("abcd1234-0000-0000-0000-000000000000");
+
+    host
+      .querySelector<HTMLButtonElement>("#tracker-import-state")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(socketFactory).toHaveBeenCalledWith("abcd1234");
+    sockets[0].emit("open", new Event("open"));
+    await Promise.resolve();
+    expect(host.textContent).toContain(
+      "Tracker state imported and shared as room ABCD1234.",
+    );
+    expect(
+      host.querySelector<HTMLSelectElement>('[data-faction-index="2"]')?.value,
+    ).toBe("The Naalu Collective");
+    expect(host.querySelector<HTMLInputElement>("#tracker-room-code")?.value).toBe(
+      "abcd1234",
+    );
+    randomUuidSpy.mockRestore();
   });
 
   it("gracefully skips turn tracker binding if controls are missing", () => {
