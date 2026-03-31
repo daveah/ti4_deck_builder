@@ -424,6 +424,12 @@
       "ref": "base:6:standard"
     },
     {
+      "key": "pok:6:large",
+      "title": "PoK 6-player large galaxy",
+      "notes": "Temporary placeholder copied from the 8-player standard layout. Edit freely in src/layouts.json.",
+      "ref": "pok:8:standard"
+    },
+    {
       "key": "pok:7:hyperlanes",
       "title": "PoK 7-player hyperlanes",
       "notes": "Adjust home systems, shared tiles, and hyperlane positions directly here.",
@@ -536,6 +542,12 @@
       ]
     },
     {
+      "key": "pok:7:alternate",
+      "title": "PoK 7-player alternate",
+      "notes": "Temporary placeholder copied from the 8-player standard layout. Edit freely in src/layouts.json.",
+      "ref": "pok:8:standard"
+    },
+    {
       "key": "pok:8:standard",
       "title": "PoK 8-player standard",
       "notes": "Adjust home systems, shared tiles, and hyperlane positions directly here.",
@@ -604,6 +616,12 @@
       ]
     },
     {
+      "key": "pok:8:alternate",
+      "title": "PoK 8-player alternate",
+      "notes": "Temporary placeholder copied from the 8-player standard layout. Edit freely in src/layouts.json.",
+      "ref": "pok:8:standard"
+    },
+    {
       "key": "thunders_edge:3:standard",
       "title": "Thunder's Edge 3-player standard",
       "notes": "This starts from the base standard geometry. Edit freely in src/layouts.json.",
@@ -640,15 +658,33 @@
       "ref": "base:6:standard"
     },
     {
+      "key": "thunders_edge:6:large",
+      "title": "Thunder's Edge 6-player large galaxy",
+      "notes": "Temporary placeholder copied from the 8-player standard layout. Edit freely in src/layouts.json.",
+      "ref": "pok:8:standard"
+    },
+    {
       "key": "thunders_edge:7:hyperlanes",
       "title": "Thunder's Edge 7-player hyperlanes",
       "notes": "Adjust home systems, shared tiles, and hyperlane positions directly here.",
       "ref": "pok:7:hyperlanes"
     },
     {
+      "key": "thunders_edge:7:alternate",
+      "title": "Thunder's Edge 7-player alternate",
+      "notes": "Temporary placeholder copied from the 8-player standard layout. Edit freely in src/layouts.json.",
+      "ref": "pok:8:standard"
+    },
+    {
       "key": "thunders_edge:8:standard",
       "title": "Thunder's Edge 8-player standard",
       "notes": "Adjust home systems, shared tiles, and hyperlane positions directly here.",
+      "ref": "pok:8:standard"
+    },
+    {
+      "key": "thunders_edge:8:alternate",
+      "title": "Thunder's Edge 8-player alternate",
+      "notes": "Temporary placeholder copied from the 8-player standard layout. Edit freely in src/layouts.json.",
       "ref": "pok:8:standard"
     }
   ]
