@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  bindAppTabs,
   bindResultTabs,
+  bindTurnTracker,
   describeSetupVariant,
   getLayoutDefinition,
   initializeApp,
   renderBoardPreview,
   renderHyperlaneGlyph,
   renderResult,
+  renderTurnTracker,
   rotationTransform,
   type AppDependencies,
   type BoardTile,
@@ -274,6 +277,67 @@ describe("app helpers", () => {
     expect(html).toContain("None for this setup.");
     expect(html).toContain("None.");
   });
+
+  it("renders a turn tracker shell", () => {
+    const html = renderTurnTracker(4);
+    expect(html).toContain("Turn Order Tracker");
+    expect(html).toContain('id="tracker-player-count"');
+    expect(html).toContain('value="Player 4"');
+  });
+
+  it("switches the top-level app tabs", () => {
+    const host = document.createElement("div");
+    host.innerHTML = `
+      <div>
+        <button type="button" class="app-tab is-active" data-app-tab-target="builder" aria-selected="true">Galaxy Builder</button>
+        <button type="button" class="app-tab" data-app-tab-target="tracker" aria-selected="false">Turn Tracker</button>
+        <section class="app-pane is-active" data-app-tab-panel="builder"></section>
+        <section class="app-pane" data-app-tab-panel="tracker" hidden></section>
+      </div>
+    `;
+    bindAppTabs(host);
+
+    const tabs = host.querySelectorAll<HTMLButtonElement>(".app-tab");
+    const panes = host.querySelectorAll<HTMLElement>(".app-pane");
+    tabs[1].click();
+
+    expect(tabs[1].classList.contains("is-active")).toBe(true);
+    expect(tabs[1].getAttribute("aria-selected")).toBe("true");
+    expect(panes[0].hidden).toBe(true);
+    expect(panes[1].hidden).toBe(false);
+  });
+
+  it("binds turn tracker controls", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(4);
+    bindTurnTracker(host);
+
+    const next = host.querySelector<HTMLButtonElement>("#tracker-next");
+    const nextRound = host.querySelector<HTMLButtonElement>("#tracker-next-round");
+    const playerCount = host.querySelector<HTMLSelectElement>("#tracker-player-count");
+    const activeLabel = host.querySelector<HTMLElement>("#tracker-active-label");
+    const roundLabel = host.querySelector<HTMLElement>("#tracker-round-label");
+    const firstName = host.querySelector<HTMLInputElement>('[data-name-index="0"]');
+
+    firstName!.value = "Sol";
+    firstName!.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(activeLabel?.textContent).toBe("Sol");
+
+    next!.click();
+    expect(activeLabel?.textContent).toBe("Player 2");
+
+    nextRound!.click();
+    expect(roundLabel?.textContent).toBe("2");
+    expect(activeLabel?.textContent).toBe("Sol");
+
+    playerCount!.value = "3";
+    playerCount!.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(host.querySelectorAll(".tracker-row")).toHaveLength(3);
+  });
+
+  it("gracefully skips turn tracker binding if controls are missing", () => {
+    expect(() => bindTurnTracker(document.createElement("div"))).not.toThrow();
+  });
 });
 
 describe("initializeApp", () => {
@@ -325,6 +389,7 @@ describe("initializeApp", () => {
     const setup = root.querySelector<HTMLSelectElement>("#setup");
     expect(setup?.value).toBe("hyperlanes");
     expect(app.layoutPreviewView.innerHTML).toContain("Board Layout Preview");
+    expect(app.trackerView.innerHTML).toContain("Turn Order Tracker");
   });
 
   it("re-renders the board preview when rotation changes", () => {

@@ -425,6 +425,204 @@ export function bindResultTabs(resultsView: HTMLElement): void {
   }
 }
 
+export function renderTurnTracker(playerCount = 6): string {
+  const rows = Array.from({ length: playerCount }, (_, index) => {
+    const playerNumber = index + 1;
+    return `
+      <div class="tracker-row${index === 0 ? " is-active" : ""}" data-player-index="${index}">
+        <div class="tracker-row-main">
+          <span class="tracker-seat">P${playerNumber}</span>
+          <input
+            class="tracker-name-input"
+            data-name-index="${index}"
+            type="text"
+            value="Player ${playerNumber}"
+            aria-label="Player ${playerNumber} name"
+          />
+        </div>
+        <button type="button" class="tracker-set-active" data-set-active="${index}">Set Active</button>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <section class="tracker-shell">
+      <div class="tracker-topline">
+        <div>
+          <p class="eyebrow">Turn Order Tracker</p>
+          <h2>Track initiative and pass the turn around the table.</h2>
+          <p class="lede">Use this panel to keep a shared turn marker moving, rename seats for your table, and jump directly to any player when the order changes.</p>
+        </div>
+        <div class="tracker-summary">
+          <span>Round <strong id="tracker-round-label">1</strong></span>
+          <span>Active <strong id="tracker-active-label">Player 1</strong></span>
+        </div>
+      </div>
+      <div class="tracker-controls">
+        <label>
+          <span>Players</span>
+          <select id="tracker-player-count">
+            ${Array.from({ length: 6 }, (_, index) => index + 3)
+              .map(
+                (count) =>
+                  `<option value="${count}"${count === playerCount ? " selected" : ""}>${count}</option>`,
+              )
+              .join("")}
+          </select>
+        </label>
+        <label>
+          <span>Round</span>
+          <input id="tracker-round" type="number" min="1" value="1" />
+        </label>
+        <div class="tracker-button-row">
+          <button type="button" id="tracker-prev">Previous Turn</button>
+          <button type="button" id="tracker-next">Next Turn</button>
+          <button type="button" id="tracker-next-round">Next Round</button>
+          <button type="button" id="tracker-reset">Reset</button>
+        </div>
+      </div>
+      <div id="tracker-list" class="tracker-list">${rows}</div>
+    </section>
+  `;
+}
+
+export function bindAppTabs(appRoot: HTMLElement): void {
+  const tabButtons = appRoot.querySelectorAll<HTMLButtonElement>(".app-tab");
+  const panes = appRoot.querySelectorAll<HTMLElement>(".app-pane");
+  if (!tabButtons.length || !panes.length) return;
+
+  for (const button of tabButtons) {
+    button.addEventListener("click", () => {
+      const target = button.dataset.appTabTarget;
+      for (const tabButton of tabButtons) {
+        const active = tabButton === button;
+        tabButton.classList.toggle("is-active", active);
+        tabButton.setAttribute("aria-selected", active ? "true" : "false");
+      }
+      for (const pane of panes) {
+        const active = pane.dataset.appTabPanel === target;
+        pane.hidden = !active;
+        pane.classList.toggle("is-active", active);
+      }
+    });
+  }
+}
+
+export function bindTurnTracker(trackerRoot: HTMLElement): void {
+  const playerCountField =
+    trackerRoot.querySelector<HTMLSelectElement>("#tracker-player-count");
+  const roundField = trackerRoot.querySelector<HTMLInputElement>("#tracker-round");
+  const roundLabel =
+    trackerRoot.querySelector<HTMLElement>("#tracker-round-label");
+  const activeLabel =
+    trackerRoot.querySelector<HTMLElement>("#tracker-active-label");
+  const trackerList = trackerRoot.querySelector<HTMLElement>("#tracker-list");
+  const previousButton =
+    trackerRoot.querySelector<HTMLButtonElement>("#tracker-prev");
+  const nextButton =
+    trackerRoot.querySelector<HTMLButtonElement>("#tracker-next");
+  const nextRoundButton =
+    trackerRoot.querySelector<HTMLButtonElement>("#tracker-next-round");
+  const resetButton =
+    trackerRoot.querySelector<HTMLButtonElement>("#tracker-reset");
+
+  if (
+    !playerCountField ||
+    !roundField ||
+    !roundLabel ||
+    !activeLabel ||
+    !trackerList ||
+    !previousButton ||
+    !nextButton ||
+    !nextRoundButton ||
+    !resetButton
+  ) {
+    return;
+  }
+
+  let playerCount = Number.parseInt(playerCountField.value, 10) || 6;
+  let currentTurn = 0;
+  let names = Array.from({ length: playerCount }, (_, index) => `Player ${index + 1}`);
+
+  const updateSummary = () => {
+    roundLabel.textContent = String(Number.parseInt(roundField.value, 10) || 1);
+    activeLabel.textContent = names[currentTurn] ?? `Player ${currentTurn + 1}`;
+  };
+
+  const renderRows = () => {
+    trackerList.innerHTML = Array.from({ length: playerCount }, (_, index) => {
+      const playerNumber = index + 1;
+      return `
+        <div class="tracker-row${index === currentTurn ? " is-active" : ""}" data-player-index="${index}">
+          <div class="tracker-row-main">
+            <span class="tracker-seat">P${playerNumber}</span>
+            <input
+              class="tracker-name-input"
+              data-name-index="${index}"
+              type="text"
+              value="${names[index] ?? `Player ${playerNumber}`}"
+              aria-label="Player ${playerNumber} name"
+            />
+          </div>
+          <button type="button" class="tracker-set-active" data-set-active="${index}">Set Active</button>
+        </div>
+      `;
+    }).join("");
+
+    for (const input of trackerList.querySelectorAll<HTMLInputElement>(".tracker-name-input")) {
+      input.addEventListener("input", () => {
+        const index = Number.parseInt(input.dataset.nameIndex ?? "0", 10);
+        names[index] = input.value || `Player ${index + 1}`;
+        updateSummary();
+      });
+    }
+
+    for (const button of trackerList.querySelectorAll<HTMLButtonElement>(".tracker-set-active")) {
+      button.addEventListener("click", () => {
+        currentTurn = Number.parseInt(button.dataset.setActive ?? "0", 10) || 0;
+        renderRows();
+        updateSummary();
+      });
+    }
+  };
+
+  playerCountField.addEventListener("change", () => {
+    playerCount = Number.parseInt(playerCountField.value, 10) || 6;
+    names = Array.from({ length: playerCount }, (_, index) => names[index] ?? `Player ${index + 1}`);
+    currentTurn = Math.min(currentTurn, playerCount - 1);
+    renderRows();
+    updateSummary();
+  });
+
+  roundField.addEventListener("input", updateSummary);
+  previousButton.addEventListener("click", () => {
+    currentTurn = (currentTurn - 1 + playerCount) % playerCount;
+    renderRows();
+    updateSummary();
+  });
+  nextButton.addEventListener("click", () => {
+    currentTurn = (currentTurn + 1) % playerCount;
+    renderRows();
+    updateSummary();
+  });
+  nextRoundButton.addEventListener("click", () => {
+    roundField.value = String((Number.parseInt(roundField.value, 10) || 1) + 1);
+    currentTurn = 0;
+    renderRows();
+    updateSummary();
+  });
+  resetButton.addEventListener("click", () => {
+    roundField.value = "1";
+    currentTurn = 0;
+    names = Array.from({ length: playerCount }, (_, index) => `Player ${index + 1}`);
+    renderRows();
+    updateSummary();
+  });
+
+  renderRows();
+  updateSummary();
+}
+
 export type AppDependencies = {
   buildGame: typeof buildGame;
   getSetupOptions: typeof getSetupOptions;
@@ -437,6 +635,7 @@ export type InitializedApp = {
   renderPreview: () => void;
   resultsView: HTMLElement;
   layoutPreviewView: HTMLElement;
+  trackerView: HTMLElement;
 };
 
 const defaultAppDependencies: AppDependencies = {
@@ -455,56 +654,65 @@ export function initializeApp(
 
   appRoot.innerHTML = `
     <main class="page-shell">
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">Twilight Imperium 4</p>
-          <h1>Build a galaxy draft that feels fair before the first ship moves.</h1>
-          <p class="lede">Generate balanced system-tile draft stacks for your table, using the official setup rules for the base game, Prophecy of Kings, and Thunder's Edge, with clear callouts for shared center tiles and leftovers.</p>
-          <ol class="instruction-list">
-            <li>Pick your ruleset, player count, and the official setup map variant available for that configuration.</li>
-            <li>Leave the seed blank for a fresh random result, or enter a seed when you want a deal you can reproduce exactly.</li>
-            <li>Deal the listed stacks, place any shared tiles, and ignore the leftovers.</li>
-          </ol>
-          <p class="lede">Setup variants change the shape of the final map. Expansion games at 4, 5, and 7 players can use hyperlane layouts, while 8-player expansion uses the standard shared-center setup.</p>
-        </div>
-        <div class="hero-art" aria-hidden="true">
-          <svg viewBox="0 0 520 420">
-            <defs>
-              <linearGradient id="nebula" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ffcf70" />
-                <stop offset="55%" stop-color="#f06767" />
-                <stop offset="100%" stop-color="#243b6b" />
-              </linearGradient>
-            </defs>
-            <rect width="520" height="420" rx="36" fill="#10192a" />
-            <circle cx="384" cy="108" r="88" fill="url(#nebula)" opacity="0.82" />
-            <circle cx="154" cy="136" r="56" fill="#6ea0ff" opacity="0.34" />
-            <g fill="none" stroke="#f5efe0" stroke-width="6" opacity="0.9">
-              <path d="M112 258 162 228 212 258 212 316 162 346 112 316Z" />
-              <path d="M205 196 255 166 305 196 305 254 255 284 205 254Z" />
-              <path d="M298 258 348 228 398 258 398 316 348 346 298 316Z" />
-            </g>
-            <g fill="#f5efe0">
-              <circle cx="94" cy="92" r="4" />
-              <circle cx="432" cy="60" r="3" />
-              <circle cx="446" cy="246" r="5" />
-              <circle cx="128" cy="364" r="3" />
-            </g>
-          </svg>
-        </div>
+      <div class="app-tabs" role="tablist" aria-label="App views">
+        <button type="button" class="app-tab is-active" data-app-tab-target="builder" aria-selected="true">Galaxy Builder</button>
+        <button type="button" class="app-tab" data-app-tab-target="tracker" aria-selected="false">Turn Order Tracker</button>
+      </div>
+      <section class="app-pane is-active" data-app-tab-panel="builder">
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Twilight Imperium 4</p>
+            <h1>Build a galaxy draft that feels fair before the first ship moves.</h1>
+            <p class="lede">Generate balanced system-tile draft stacks for your table, using the official setup rules for the base game, Prophecy of Kings, and Thunder's Edge, with clear callouts for shared center tiles and leftovers.</p>
+            <ol class="instruction-list">
+              <li>Pick your ruleset, player count, and the official setup map variant available for that configuration.</li>
+              <li>Leave the seed blank for a fresh random result, or enter a seed when you want a deal you can reproduce exactly.</li>
+              <li>Deal the listed stacks, place any shared tiles, and ignore the leftovers.</li>
+            </ol>
+            <p class="lede">Setup variants change the shape of the final map. Expansion games at 4, 5, and 7 players can use hyperlane layouts, while 8-player expansion uses the standard shared-center setup.</p>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <svg viewBox="0 0 520 420">
+              <defs>
+                <linearGradient id="nebula" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ffcf70" />
+                  <stop offset="55%" stop-color="#f06767" />
+                  <stop offset="100%" stop-color="#243b6b" />
+                </linearGradient>
+              </defs>
+              <rect width="520" height="420" rx="36" fill="#10192a" />
+              <circle cx="384" cy="108" r="88" fill="url(#nebula)" opacity="0.82" />
+              <circle cx="154" cy="136" r="56" fill="#6ea0ff" opacity="0.34" />
+              <g fill="none" stroke="#f5efe0" stroke-width="6" opacity="0.9">
+                <path d="M112 258 162 228 212 258 212 316 162 346 112 316Z" />
+                <path d="M205 196 255 166 305 196 305 254 255 284 205 254Z" />
+                <path d="M298 258 348 228 398 258 398 316 348 346 298 316Z" />
+              </g>
+              <g fill="#f5efe0">
+                <circle cx="94" cy="92" r="4" />
+                <circle cx="432" cy="60" r="3" />
+                <circle cx="446" cy="246" r="5" />
+                <circle cx="128" cy="364" r="3" />
+              </g>
+            </svg>
+          </div>
+        </section>
+        <section class="control-panel">
+          <form id="deck-form" class="deck-form">
+            <label><span>Mode</span><select id="mode">${modes.map((mode) => `<option value="${mode}">${mode}</option>`).join("")}</select></label>
+            <label><span>Players</span><input id="players" type="number" min="3" max="8" value="6" /></label>
+            <label><span>Setup</span><select id="setup"></select></label>
+            <label><span>Seed</span><input id="seed" type="number" placeholder="Random" /></label>
+            <label><span>Restarts</span><input id="restarts" type="number" min="10" max="5000" value="500" /></label>
+            <button type="submit">Generate balanced decks</button>
+          </form>
+          <div id="layout-preview"></div>
+        </section>
+        <section id="results"></section>
       </section>
-      <section class="control-panel">
-        <form id="deck-form" class="deck-form">
-          <label><span>Mode</span><select id="mode">${modes.map((mode) => `<option value="${mode}">${mode}</option>`).join("")}</select></label>
-          <label><span>Players</span><input id="players" type="number" min="3" max="8" value="6" /></label>
-          <label><span>Setup</span><select id="setup"></select></label>
-          <label><span>Seed</span><input id="seed" type="number" placeholder="Random" /></label>
-          <label><span>Restarts</span><input id="restarts" type="number" min="10" max="5000" value="500" /></label>
-          <button type="submit">Generate balanced decks</button>
-        </form>
-        <div id="layout-preview"></div>
+      <section class="app-pane" data-app-tab-panel="tracker" hidden>
+        <section id="turn-tracker-view">${renderTurnTracker()}</section>
       </section>
-      <section id="results"></section>
     </main>
   `;
 
@@ -516,6 +724,7 @@ export function initializeApp(
   const form = appRoot.querySelector<HTMLFormElement>("#deck-form");
   const results = appRoot.querySelector<HTMLElement>("#results");
   const layoutPreview = appRoot.querySelector<HTMLElement>("#layout-preview");
+  const trackerView = appRoot.querySelector<HTMLElement>("#turn-tracker-view");
 
   if (
     !playersInput ||
@@ -525,7 +734,8 @@ export function initializeApp(
     !restartInput ||
     !form ||
     !results ||
-    !layoutPreview
+    !layoutPreview ||
+    !trackerView
   ) {
     throw new Error("UI failed to initialize.");
   }
@@ -538,6 +748,7 @@ export function initializeApp(
   const deckForm = form;
   const resultsView = results;
   const layoutPreviewView = layoutPreview;
+  const turnTrackerView = trackerView;
   let boardRotation = 0;
 
   function bindPreviewRotationControl(): void {
@@ -631,6 +842,8 @@ export function initializeApp(
     generate();
   });
 
+  bindAppTabs(appRoot);
+  bindTurnTracker(turnTrackerView);
   refreshSetups();
   generate();
 
@@ -640,6 +853,7 @@ export function initializeApp(
     renderPreview,
     resultsView,
     layoutPreviewView,
+    trackerView: turnTrackerView,
   };
 }
 
