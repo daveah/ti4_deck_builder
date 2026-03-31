@@ -101,7 +101,10 @@ export default class TrackerServer implements Party.Server {
         return;
       }
 
-      if (parsed.type === "replace_state" && isTrackerSharedState(parsed.state)) {
+      if (
+        parsed.type === "replace_state" &&
+        isTrackerSharedState(parsed.state)
+      ) {
         this.sharedState = parsed.state;
         this.broadcastSnapshot();
         return;
