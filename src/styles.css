@@ -164,6 +164,24 @@ select {
 .preview-copy p {
   color: var(--muted);
 }
+.preview-control {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.9rem 0 1rem;
+}
+.preview-control span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.preview-control select {
+  width: 100%;
+  max-width: 220px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  padding: 0.65rem 0.8rem;
+}
 .preview-copy code,
 .preview-legend code {
   font-family: Consolas, "Courier New", monospace;
@@ -173,6 +191,9 @@ select {
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
+}
+.preview-legend {
+  margin-top: 1.2rem;
 }
 .preview-tags span,
 .preview-legend span {
@@ -197,7 +218,7 @@ select {
   border: 1px solid rgba(255, 255, 255, 0.16);
 }
 .legend-swatch.red {
-  background: #ffcf70;
+  background: #ff8d86;
 }
 .legend-swatch.blue {
   background: #88b6ff;

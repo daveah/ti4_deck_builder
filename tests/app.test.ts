@@ -195,6 +195,8 @@ describe("app helpers", () => {
     expect(glyph).toContain('x1="122"');
     expect(glyph).toContain('y1="200"');
     expect(glyph).toContain(">83A<");
+    expect(glyph).toContain('fill="#ffcf70"');
+    expect(glyph).toContain('paint-order="stroke fill"');
     expect(
       renderHyperlaneGlyph({ q: 0, r: 0, kind: "hyperlane" }, 10, 20),
     ).toContain("<line");
@@ -224,11 +226,24 @@ describe("app helpers", () => {
     );
     expect(preview).toContain("Board Layout Preview");
     expect(preview).toContain("Base standard");
+    expect(preview).toContain("Board Rotation");
+    expect(preview).toContain('<option value="0" selected>0&deg;</option>');
+    expect(preview).toContain('<option value="1">30&deg;</option>');
     expect(preview).toContain("Green: home system");
     expect(preview).toContain(
       'aria-label="Board layout preview for 6 player standard configuration"',
     );
     expect(preview).toContain("83A");
+    expect(preview).toContain('transform="rotate(0 ');
+    const rotatedPreview = renderBoardPreview(
+      "base",
+      6,
+      "standard",
+      sampleLayoutFile(),
+      2,
+    );
+    expect(rotatedPreview).toContain('transform="rotate(60 ');
+    expect(rotatedPreview).toContain('transform="rotate(-60 ');
   });
 
   it("renders results and toggles result tabs", () => {
@@ -310,6 +325,61 @@ describe("initializeApp", () => {
     const setup = root.querySelector<HTMLSelectElement>("#setup");
     expect(setup?.value).toBe("hyperlanes");
     expect(app.layoutPreviewView.innerHTML).toContain("Board Layout Preview");
+  });
+
+  it("re-renders the board preview when rotation changes", () => {
+    const root = document.createElement("div");
+    root.id = "app";
+    document.body.append(root);
+
+    const app = initializeApp(root, makeDependencies());
+    const rotation = root.querySelector<HTMLSelectElement>("#board-rotation");
+    expect(rotation?.value).toBe("0");
+
+    rotation!.value = "2";
+    rotation!.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const updatedRotation =
+      root.querySelector<HTMLSelectElement>("#board-rotation");
+    expect(updatedRotation?.value).toBe("2");
+    expect(app.layoutPreviewView.innerHTML).toContain('transform="rotate(60 ');
+  });
+
+  it("falls back to zero rotation if the dropdown value is invalid", () => {
+    const root = document.createElement("div");
+    root.id = "app";
+    document.body.append(root);
+
+    const app = initializeApp(root, makeDependencies());
+    const rotation = root.querySelector<HTMLSelectElement>("#board-rotation");
+    rotation!.value = "not-a-number";
+    rotation!.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const updatedRotation =
+      root.querySelector<HTMLSelectElement>("#board-rotation");
+    expect(updatedRotation?.value).toBe("0");
+    expect(app.layoutPreviewView.innerHTML).toContain('transform="rotate(0 ');
+  });
+
+  it("gracefully skips binding if the rotation control cannot be found", () => {
+    const root = document.createElement("div");
+    root.id = "app";
+    document.body.append(root);
+
+    const app = initializeApp(root, makeDependencies());
+    const originalQuerySelector = app.layoutPreviewView.querySelector.bind(
+      app.layoutPreviewView,
+    );
+    vi.spyOn(app.layoutPreviewView, "querySelector").mockImplementation(
+      (selector) => {
+        if (selector === "#board-rotation") {
+          return null;
+        }
+        return originalQuerySelector(selector);
+      },
+    );
+
+    expect(() => app.renderPreview()).not.toThrow();
   });
 
   it("renders a successful explicit-seed generation from submit", () => {

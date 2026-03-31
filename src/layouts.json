@@ -609,12 +609,41 @@
       "notes": "Temporary placeholder copied from the 8-player standard layout. Edit freely in src/layouts.json.",
       "tiles": [
         { "q": 0, "r": 0, "kind": "red", "label": "MR" },
-        { "q": -1, "r": 1, "kind": "hyperlane", "hyperlaneId": "84B", "connections": [[0, 2], [3, 5], [2, 5]] },
+        {
+          "q": -1,
+          "r": 1,
+          "kind": "hyperlane",
+          "hyperlaneId": "84B",
+          "connections": [
+            [0, 2],
+            [3, 5],
+            [2, 5]
+          ]
+        },
         { "q": 0, "r": 1, "kind": "blue1" },
         { "q": 1, "r": 0, "kind": "blue1" },
-        { "q": 1, "r": -1, "kind": "hyperlane", "hyperlaneId": "83B", "connections": [[1, 5], [2, 4], [2, 5]] },
+        {
+          "q": 1,
+          "r": -1,
+          "kind": "hyperlane",
+          "hyperlaneId": "83B",
+          "connections": [
+            [1, 5],
+            [2, 4],
+            [2, 5]
+          ]
+        },
         { "q": 0, "r": -1, "kind": "blue1" },
-        { "q": -1, "r": 0, "kind": "hyperlane", "hyperlaneId": "89B", "connections": [[2, 5], [3, 5]] },
+        {
+          "q": -1,
+          "r": 0,
+          "kind": "hyperlane",
+          "hyperlaneId": "89B",
+          "connections": [
+            [2, 5],
+            [3, 5]
+          ]
+        },
         { "q": -2, "r": 2, "kind": "blue1" },
         { "q": -1, "r": 2, "kind": "blue2" },
         { "q": 0, "r": 2, "kind": "blue2" },
@@ -631,20 +660,50 @@
         { "q": 1, "r": -3, "kind": "blue2" },
         { "q": 2, "r": -3, "kind": "blue2" },
         { "q": 3, "r": -3, "kind": "blue2" },
-        { "q": 3, "r": -2, "kind": "hyperlane", "hyperlaneId": "85B", "connections": [[1, 5], [2, 4], [2, 5]] },
+        {
+          "q": 3,
+          "r": -2,
+          "kind": "hyperlane",
+          "hyperlaneId": "85B",
+          "connections": [
+            [1, 5],
+            [2, 4],
+            [2, 5]
+          ]
+        },
         { "q": 3, "r": -1, "kind": "blue3" },
         { "q": 3, "r": 0, "kind": "green", "label": "H3" },
         { "q": 2, "r": 1, "kind": "blue3" },
         { "q": 1, "r": 2, "kind": "blue3" },
         { "q": 0, "r": 3, "kind": "green", "label": "H4" },
         { "q": -1, "r": 3, "kind": "blue3" },
-        { "q": -2, "r": 3, "kind": "hyperlane", "hyperlaneId": "86b", "connections": [[0, 2], [3, 5], [2, 5]] },
+        {
+          "q": -2,
+          "r": 3,
+          "kind": "hyperlane",
+          "hyperlaneId": "86b",
+          "connections": [
+            [0, 2],
+            [3, 5],
+            [2, 5]
+          ]
+        },
         { "q": -3, "r": 3, "kind": "blue2" },
         { "q": -3, "r": 2, "kind": "blue2" },
         { "q": -3, "r": 1, "kind": "blue2" },
         { "q": -3, "r": 0, "kind": "blue3" },
         { "q": -2, "r": -1, "kind": "blue3" },
-        { "q": -1, "r": -2, "kind": "hyperlane", "hyperlaneId": "88b", "connections": [[0, 4], [1, 3], [1, 4]] },
+        {
+          "q": -1,
+          "r": -2,
+          "kind": "hyperlane",
+          "hyperlaneId": "88b",
+          "connections": [
+            [0, 4],
+            [1, 3],
+            [1, 4]
+          ]
+        },
         { "q": 1, "r": -4, "kind": "green", "label": "H1" },
         { "q": 2, "r": -4, "kind": "blue3" },
         { "q": 3, "r": -4, "kind": "blue3" },
@@ -733,12 +792,50 @@
       "notes": "Temporary placeholder copied from the 8-player standard layout. Edit freely in src/layouts.json.",
       "tiles": [
         { "q": 0, "r": 0, "kind": "red", "label": "MR" },
-        { "q": -1, "r": 1, "kind": "hyperlane", "hyperlaneId": "87A", "connections": [[5, 1], [5, 2], [5, 3]] },
+        {
+          "q": -1,
+          "r": 1,
+          "kind": "hyperlane",
+          "hyperlaneId": "87A",
+          "connections": [
+            [5, 1],
+            [5, 2],
+            [5, 3]
+          ]
+        },
         { "q": 0, "r": 1, "kind": "blue1" },
-        { "q": 1, "r": 0, "kind": "hyperlane", "hyperlaneId": "89B", "connections": [[2, 5], [2, 0]] },
-        { "q": 1, "r": -1, "kind": "hyperlane", "hyperlaneId": "88A", "connections": [[2, 4], [2, 5], [2, 0]] },
+        {
+          "q": 1,
+          "r": 0,
+          "kind": "hyperlane",
+          "hyperlaneId": "89B",
+          "connections": [
+            [2, 5],
+            [2, 0]
+          ]
+        },
+        {
+          "q": 1,
+          "r": -1,
+          "kind": "hyperlane",
+          "hyperlaneId": "88A",
+          "connections": [
+            [2, 4],
+            [2, 5],
+            [2, 0]
+          ]
+        },
         { "q": 0, "r": -1, "kind": "blue1" },
-        { "q": -1, "r": 0, "kind": "hyperlane", "hyperlaneId": "90B", "connections": [[5, 2], [5, 3]] },
+        {
+          "q": -1,
+          "r": 0,
+          "kind": "hyperlane",
+          "hyperlaneId": "90B",
+          "connections": [
+            [5, 2],
+            [5, 3]
+          ]
+        },
         { "q": -2, "r": 2, "kind": "blue1" },
         { "q": -1, "r": 2, "kind": "blue1" },
         { "q": 0, "r": 2, "kind": "blue2" },
@@ -759,7 +856,17 @@
         { "q": 3, "r": -1, "kind": "blue2" },
         { "q": 3, "r": 0, "kind": "blue3" },
         { "q": 2, "r": 1, "kind": "blue3" },
-        { "q": 1, "r": 2, "kind": "hyperlane", "hyperlaneId": "83B", "connections": [[0, 4], [1, 3], [1, 4]] },
+        {
+          "q": 1,
+          "r": 2,
+          "kind": "hyperlane",
+          "hyperlaneId": "83B",
+          "connections": [
+            [0, 4],
+            [1, 3],
+            [1, 4]
+          ]
+        },
         { "q": 0, "r": 3, "kind": "blue3" },
         { "q": -1, "r": 3, "kind": "blue2" },
         { "q": -2, "r": 3, "kind": "blue2" },
@@ -768,7 +875,17 @@
         { "q": -3, "r": 1, "kind": "blue2" },
         { "q": -3, "r": 0, "kind": "blue3" },
         { "q": -2, "r": -1, "kind": "blue3" },
-        { "q": -1, "r": -2, "kind": "hyperlane", "hyperlaneId": "85B", "connections": [[0, 4], [1, 3], [1, 4]] },
+        {
+          "q": -1,
+          "r": -2,
+          "kind": "hyperlane",
+          "hyperlaneId": "85B",
+          "connections": [
+            [0, 4],
+            [1, 3],
+            [1, 4]
+          ]
+        },
         { "q": 1, "r": -4, "kind": "green", "label": "H1" },
         { "q": 2, "r": -4, "kind": "blue3" },
         { "q": 3, "r": -4, "kind": "blue3" },
