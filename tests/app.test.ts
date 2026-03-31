@@ -109,6 +109,20 @@ function sampleLayoutFile(): LayoutFile {
   };
 }
 
+function makeDataTransfer() {
+  const store = new Map<string, string>();
+  return {
+    effectAllowed: "move",
+    dropEffect: "move",
+    setData(type: string, value: string) {
+      store.set(type, value);
+    },
+    getData(type: string) {
+      return store.get(type) ?? "";
+    },
+  };
+}
+
 beforeEach(() => {
   document.body.innerHTML = "";
 });
@@ -281,8 +295,14 @@ describe("app helpers", () => {
   it("renders a turn tracker shell", () => {
     const html = renderTurnTracker(4);
     expect(html).toContain("Turn Order Tracker");
+    expect(html).toContain('id="tracker-expansion"');
     expect(html).toContain('id="tracker-player-count"');
-    expect(html).toContain('value="Player 4"');
+    expect(html).toContain("Select race");
+    expect(html).toContain("Strategy Board");
+    expect(html).toContain("Naalu Token");
+    expect(html).toContain("Leadership");
+    expect(html).toContain("Imperial");
+    expect(html).toContain("Unassigned Factions");
   });
 
   it("switches the top-level app tabs", () => {
@@ -312,27 +332,130 @@ describe("app helpers", () => {
     host.innerHTML = renderTurnTracker(4);
     bindTurnTracker(host);
 
-    const next = host.querySelector<HTMLButtonElement>("#tracker-next");
-    const nextRound = host.querySelector<HTMLButtonElement>("#tracker-next-round");
-    const playerCount = host.querySelector<HTMLSelectElement>("#tracker-player-count");
-    const activeLabel = host.querySelector<HTMLElement>("#tracker-active-label");
-    const roundLabel = host.querySelector<HTMLElement>("#tracker-round-label");
-    const firstName = host.querySelector<HTMLInputElement>('[data-name-index="0"]');
+    const playerCount =
+      host.querySelector<HTMLSelectElement>("#tracker-player-count");
+    const expansion = host.querySelector<HTMLSelectElement>("#tracker-expansion");
+    const firstFaction =
+      host.querySelector<HTMLSelectElement>('[data-faction-index="0"]');
 
-    firstName!.value = "Sol";
-    firstName!.dispatchEvent(new Event("input", { bubbles: true }));
-    expect(activeLabel?.textContent).toBe("Sol");
+    expect(firstFaction?.textContent).toContain("The Arborec");
+    firstFaction!.value = "The Federation of Sol";
+    firstFaction!.dispatchEvent(new Event("change", { bubbles: true }));
 
-    next!.click();
-    expect(activeLabel?.textContent).toBe("Player 2");
+    const secondFaction =
+      host.querySelector<HTMLSelectElement>('[data-faction-index="1"]');
+    expect(secondFaction?.innerHTML).toContain("The Federation of Sol");
+    expect(secondFaction?.innerHTML).toContain("disabled");
 
-    nextRound!.click();
-    expect(roundLabel?.textContent).toBe("2");
-    expect(activeLabel?.textContent).toBe("Sol");
+    expansion!.value = "pok";
+    expansion!.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(
+      host.querySelector<HTMLSelectElement>('[data-faction-index="0"]')
+        ?.textContent,
+    ).toContain("The Nomad");
 
     playerCount!.value = "3";
     playerCount!.dispatchEvent(new Event("change", { bubbles: true }));
     expect(host.querySelectorAll(".tracker-row")).toHaveLength(3);
+    expect(host.querySelectorAll(".strategy-slot")).toHaveLength(9);
+  });
+
+  it("drags factions onto the strategy board, passes them, and resets the round", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const selections = [
+      "The Federation of Sol",
+      "The Arborec",
+      "The Naalu Collective",
+    ];
+    for (const [index, faction] of selections.entries()) {
+      const select = host.querySelector<HTMLSelectElement>(
+        `[data-faction-index="${index}"]`,
+      );
+      select!.value = faction;
+      select!.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    const dragToSlot = (faction: string, slot: number) => {
+      const chip = Array.from(
+        host.querySelectorAll<HTMLElement>(".tracker-chip"),
+      ).find((element) => element.dataset.factionName === faction);
+      const dragEvent = new Event("dragstart", { bubbles: true }) as Event & {
+        dataTransfer: ReturnType<typeof makeDataTransfer>;
+      };
+      dragEvent.dataTransfer = makeDataTransfer();
+      chip!.dispatchEvent(dragEvent);
+
+      const dropTarget = host.querySelector<HTMLElement>(
+        `.strategy-lane-active[data-drop-slot="${slot}"]`,
+      );
+      const dropEvent = new Event("drop", { bubbles: true }) as Event & {
+        dataTransfer: ReturnType<typeof makeDataTransfer>;
+      };
+      dropEvent.dataTransfer = dragEvent.dataTransfer;
+      dropTarget!.dispatchEvent(dropEvent);
+    };
+
+    dragToSlot("The Federation of Sol", 1);
+    dragToSlot("The Arborec", 2);
+    dragToSlot("The Naalu Collective", 0);
+
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="1"] [data-faction-name="The Federation of Sol"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Naalu Collective"]',
+      ),
+    ).not.toBeNull();
+
+    const invalidDropChip = host.querySelector(
+      '.strategy-lane-active[data-drop-slot="2"] [data-faction-name="The Arborec"]',
+    ) as HTMLElement;
+    const invalidDrag = new Event("dragstart", { bubbles: true }) as Event & {
+      dataTransfer: ReturnType<typeof makeDataTransfer>;
+    };
+    invalidDrag.dataTransfer = makeDataTransfer();
+    invalidDropChip.dispatchEvent(invalidDrag);
+    const invalidDropTarget = host.querySelector<HTMLElement>(
+      '.strategy-lane-active[data-drop-slot="0"]',
+    );
+    const invalidDrop = new Event("drop", { bubbles: true }) as Event & {
+      dataTransfer: ReturnType<typeof makeDataTransfer>;
+    };
+    invalidDrop.dataTransfer = invalidDrag.dataTransfer;
+    invalidDropTarget!.dispatchEvent(invalidDrop);
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="2"] [data-faction-name="The Arborec"]',
+      ),
+    ).not.toBeNull();
+
+    for (const faction of selections) {
+      const button = Array.from(
+        host.querySelectorAll<HTMLButtonElement>(".tracker-chip-action"),
+      ).find((element) => element.dataset.passFaction === faction);
+      button!.click();
+    }
+
+    expect(
+      host.querySelector(
+        '.strategy-lane-passed [data-faction-name="The Federation of Sol"]',
+      ),
+    ).not.toBeNull();
+    expect(host.textContent).toContain("Reset for Next Round");
+
+    host
+      .querySelector<HTMLButtonElement>("#tracker-reset-round")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+
+    expect(host.querySelector("#tracker-reset-round")).toBeNull();
+    expect(host.querySelectorAll("#tracker-pool .tracker-chip")).toHaveLength(3);
+    expect(host.textContent).toContain("Drop faction here");
   });
 
   it("gracefully skips turn tracker binding if controls are missing", () => {
