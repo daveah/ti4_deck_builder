@@ -98,11 +98,7 @@ type TrackerSharedState = {
   speakerSeat: number;
 };
 
-type CollaborationStatus =
-  | "local"
-  | "connecting"
-  | "connected"
-  | "error";
+type CollaborationStatus = "local" | "connecting" | "connected" | "error";
 
 type TrackerClientMessage =
   | {
@@ -526,8 +522,7 @@ export function renderTurnTracker(playerCount = 6): string {
   const strategySlots = Array.from({ length: 9 }, (_, index) => {
     const value = index;
     const card = strategyCards.find((entry) => entry.initiative === value);
-    const label =
-      value === 0 ? "Naalu Token" : card?.name ?? `Strategy Card ${value}`;
+    const label = value === 0 ? "Naalu Token" : card!.name;
     return `
       <article class="strategy-slot" data-strategy-slot="${value}">
         <div class="strategy-number">${value}</div>
@@ -667,393 +662,6 @@ export function bindAppTabs(appRoot: HTMLElement): void {
   }
 }
 
-function bindTurnTrackerLegacy(trackerRoot: HTMLElement): void {
-  const trackerTabs =
-    trackerRoot.querySelectorAll<HTMLButtonElement>(".tracker-tab");
-  const trackerPanes =
-    trackerRoot.querySelectorAll<HTMLElement>(".tracker-pane");
-  const expansionField =
-    trackerRoot.querySelector<HTMLSelectElement>("#tracker-expansion");
-  const playerCountField =
-    trackerRoot.querySelector<HTMLSelectElement>("#tracker-player-count");
-  const speakerField =
-    trackerRoot.querySelector<HTMLSelectElement>("#tracker-speaker");
-  const trackerList = trackerRoot.querySelector<HTMLElement>("#tracker-list");
-  const trackerPool = trackerRoot.querySelector<HTMLElement>("#tracker-pool");
-  const strategyBoard =
-    trackerRoot.querySelector<HTMLElement>("#strategy-board");
-  const roundActions = trackerRoot.querySelector<HTMLElement>(
-    "#tracker-round-actions",
-  );
-
-  if (
-    !expansionField ||
-    !playerCountField ||
-    !speakerField ||
-    !trackerList ||
-    !trackerPool ||
-    !strategyBoard ||
-    !roundActions
-  ) {
-    return;
-  }
-
-  const state: TrackerState = {
-    expansion: expansionField.value as Mode,
-    playerCount: Number.parseInt(playerCountField.value, 10) || 6,
-    selectedFactions: Array.from(
-      { length: Number.parseInt(playerCountField.value, 10) || 6 },
-      () => "",
-    ),
-    assignments: {},
-    draggingFaction: null,
-    speakerSeat: 0,
-  };
-
-  for (const button of trackerTabs) {
-    button.addEventListener("click", () => {
-      const target = button.dataset.trackerTabTarget;
-      for (const tabButton of trackerTabs) {
-        const active = tabButton === button;
-        tabButton.classList.toggle("is-active", active);
-        tabButton.setAttribute("aria-selected", active ? "true" : "false");
-      }
-      for (const pane of trackerPanes) {
-        const active = pane.dataset.trackerTabPanel === target;
-        pane.hidden = !active;
-        pane.classList.toggle("is-active", active);
-      }
-    });
-  }
-
-  const getSelectedFactions = () => state.selectedFactions.filter(Boolean);
-  const getSpeakerFaction = () => state.selectedFactions[state.speakerSeat] ?? "";
-  const getFactionSeat = (faction: string) => state.selectedFactions.indexOf(faction);
-  const getSpeakerOrderedFactions = () => {
-    const factionsWithSeats = state.selectedFactions
-      .map((faction, index) => ({ faction, index }))
-      .filter((entry) => entry.faction);
-    if (!factionsWithSeats.length) return [];
-    return factionsWithSeats
-      .sort((left, right) => {
-        const leftOffset =
-          (left.index - state.speakerSeat + state.playerCount) %
-          state.playerCount;
-        const rightOffset =
-          (right.index - state.speakerSeat + state.playerCount) %
-          state.playerCount;
-        return leftOffset - rightOffset;
-      })
-      .map((entry) => entry.faction);
-  };
-
-  const canAssignFactionToSlot = (faction: string, slot: number) => {
-    if (slot === 0) {
-      return faction === "The Naalu Collective";
-    }
-    return slot >= 1 && slot <= 8;
-  };
-
-  const clearFactionAssignment = (faction: string) => {
-    if (state.assignments[faction]) {
-      delete state.assignments[faction];
-    }
-  };
-
-  const getFactionAtSlot = (slot: number) =>
-    Object.entries(state.assignments).find(
-      ([, assignment]) => assignment.slot === slot,
-    )?.[0] ?? null;
-
-  const assignFactionToSlot = (faction: string, slot: number) => {
-    if (!faction || !canAssignFactionToSlot(faction, slot)) return;
-    const occupiedFaction = getFactionAtSlot(slot);
-    if (occupiedFaction && occupiedFaction !== faction) return;
-    clearFactionAssignment(faction);
-    state.assignments[faction] = { slot, passed: false };
-  };
-
-  const syncAssignmentsToSelections = () => {
-    const validSelections = new Set(getSelectedFactions());
-    for (const faction of Object.keys(state.assignments)) {
-      if (!validSelections.has(faction)) {
-        delete state.assignments[faction];
-      }
-    }
-  };
-
-  const renderDraggableFaction = (
-    faction: string,
-    assignment: TrackerAssignment | null = null,
-  ) => {
-    const passed = assignment?.passed ?? false;
-    const speaker = faction === getSpeakerFaction();
-    const seat = getFactionSeat(faction);
-    return `
-      <div class="tracker-chip${passed ? " is-passed" : ""}${speaker ? " is-speaker" : ""}" draggable="true" data-faction-name="${faction}">
-        <span class="tracker-chip-label">${faction}</span>
-        <span class="tracker-chip-seat">P${seat + 1}</span>
-        ${
-          assignment
-            ? `<button type="button" class="tracker-chip-action" data-pass-faction="${faction}">${passed ? "Unpass" : "Pass"}</button>`
-            : ""
-        }
-      </div>
-    `;
-  };
-
-  const bindDragSource = (element: HTMLElement, faction: string) => {
-    element.addEventListener("dragstart", (event) => {
-      state.draggingFaction = faction;
-      event.dataTransfer?.setData("text/plain", faction);
-      if (event.dataTransfer) {
-        event.dataTransfer.effectAllowed = "move";
-      }
-    });
-    element.addEventListener("dragend", () => {
-      state.draggingFaction = null;
-    });
-  };
-
-  const bindDropTarget = (element: HTMLElement, slot: number) => {
-    element.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      element.classList.add("is-over");
-      if (event.dataTransfer) {
-        event.dataTransfer.dropEffect = "move";
-      }
-    });
-    element.addEventListener("dragleave", () => {
-      element.classList.remove("is-over");
-    });
-    element.addEventListener("drop", (event) => {
-      event.preventDefault();
-      element.classList.remove("is-over");
-      const faction =
-        event.dataTransfer?.getData("text/plain") || state.draggingFaction;
-      if (!faction) return;
-      assignFactionToSlot(faction, slot);
-      renderBoard();
-    });
-  };
-
-  const renderRows = () => {
-    const availableFactions = factionsByMode[state.expansion] ?? [];
-    trackerList.innerHTML = Array.from(
-      { length: state.playerCount },
-      (_, index) => {
-      const playerNumber = index + 1;
-      const selectedFaction = state.selectedFactions[index] ?? "";
-      const selectedByOthers = new Set(
-        state.selectedFactions.filter(
-          (faction, factionIndex) => factionIndex !== index && faction,
-        ),
-      );
-      const factionOptions = [
-        `<option value="">Select race</option>`,
-        ...availableFactions.map((faction) => {
-          const disabled =
-            selectedByOthers.has(faction) && faction !== selectedFaction;
-          return `<option value="${faction}"${faction === selectedFaction ? " selected" : ""}${disabled ? " disabled" : ""}>${faction}</option>`;
-        }),
-      ].join("");
-      return `
-        <div class="tracker-row" data-player-index="${index}">
-          <div class="tracker-row-main">
-            <span class="tracker-seat">P${playerNumber}</span>
-            <select class="tracker-faction-select" data-faction-index="${index}" aria-label="Player ${playerNumber} faction">
-              ${factionOptions}
-            </select>
-          </div>
-        </div>
-      `;
-      },
-    ).join("");
-
-    for (const select of trackerList.querySelectorAll<HTMLSelectElement>(".tracker-faction-select")) {
-      select.addEventListener("change", () => {
-        const index = Number.parseInt(select.dataset.factionIndex ?? "0", 10);
-        const previousFaction = state.selectedFactions[index];
-        state.selectedFactions[index] = select.value;
-        if (previousFaction && previousFaction !== select.value) {
-          clearFactionAssignment(previousFaction);
-        }
-        syncAssignmentsToSelections();
-        renderRows();
-        renderBoard();
-      });
-    }
-  };
-
-  const renderSpeakerOptions = () => {
-    speakerField.innerHTML = state.selectedFactions
-      .map((faction, index) => ({
-        faction,
-        index,
-      }))
-      .filter((entry) => entry.faction)
-      .map(
-        (entry) =>
-          `<option value="${entry.index}"${entry.index === state.speakerSeat ? " selected" : ""}>P${entry.index + 1} - ${entry.faction}</option>`,
-      )
-      .join("");
-
-    if (!speakerField.innerHTML) {
-      speakerField.innerHTML = `<option value="0">Select factions first</option>`;
-      speakerField.disabled = true;
-      state.speakerSeat = 0;
-      return;
-    }
-
-    if (!state.selectedFactions[state.speakerSeat]) {
-      const fallbackSpeaker = state.selectedFactions.findIndex((faction) =>
-        Boolean(faction),
-      );
-      state.speakerSeat = fallbackSpeaker >= 0 ? fallbackSpeaker : 0;
-    }
-    speakerField.disabled = false;
-    speakerField.value = String(state.speakerSeat);
-  };
-
-  const renderBoard = () => {
-    renderSpeakerOptions();
-
-    const selectedFactions = getSelectedFactions();
-    const unassignedFactions = getSpeakerOrderedFactions().filter(
-      (faction) => !state.assignments[faction],
-    );
-    trackerPool.innerHTML = unassignedFactions.length
-      ? unassignedFactions
-          .map((faction) => renderDraggableFaction(faction))
-          .join("")
-      : `<p class="tracker-pool-empty">All selected factions are assigned to the board.</p>`;
-
-    for (const chip of trackerPool.querySelectorAll<HTMLElement>(".tracker-chip")) {
-      bindDragSource(chip, chip.dataset.factionName ?? "");
-    }
-
-    strategyBoard.innerHTML = Array.from({ length: 9 }, (_, index) => {
-      const slot = index;
-      const card = strategyCards.find((entry) => entry.initiative === slot);
-      const title = slot === 0 ? "Naalu Token" : card?.name ?? `Strategy Card ${slot}`;
-      const activeFaction =
-        Object.entries(state.assignments).find(
-          ([, assignment]) => assignment.slot === slot && !assignment.passed,
-        )?.[0] ?? null;
-      const passedFaction =
-        Object.entries(state.assignments).find(
-          ([, assignment]) => assignment.slot === slot && assignment.passed,
-        )?.[0] ?? null;
-      return `
-        <article class="strategy-slot strategy-slot-row" data-strategy-slot="${slot}">
-          <div class="strategy-number">${slot}</div>
-          <div class="strategy-copy">
-            <h3>${title}</h3>
-          </div>
-          <section class="strategy-lane strategy-lane-active" data-drop-slot="${slot}">
-            <div class="strategy-lane-body">
-              ${
-                activeFaction
-                  ? renderDraggableFaction(
-                      activeFaction,
-                      state.assignments[activeFaction] ?? null,
-                    )
-                  : `<p class="strategy-placeholder">${slot === 0 ? "Drop Naalu here" : "Drop faction here"}</p>`
-              }
-            </div>
-          </section>
-          <section class="strategy-lane strategy-lane-passed">
-            <div class="strategy-lane-body">
-              ${
-                passedFaction
-                  ? renderDraggableFaction(
-                      passedFaction,
-                      state.assignments[passedFaction] ?? null,
-                    )
-                  : `<p class="strategy-placeholder">None</p>`
-              }
-            </div>
-          </section>
-        </article>
-      `;
-    }).join("");
-
-    for (const dropTarget of strategyBoard.querySelectorAll<HTMLElement>(
-      ".strategy-lane-active",
-    )) {
-      bindDropTarget(
-        dropTarget,
-        Number.parseInt(dropTarget.dataset.dropSlot ?? "0", 10),
-      );
-    }
-
-    for (const chip of strategyBoard.querySelectorAll<HTMLElement>(".tracker-chip")) {
-      bindDragSource(chip, chip.dataset.factionName ?? "");
-    }
-
-    for (const button of strategyBoard.querySelectorAll<HTMLButtonElement>(
-      ".tracker-chip-action",
-    )) {
-      button.addEventListener("click", () => {
-        const faction = button.dataset.passFaction ?? "";
-        const assignment = state.assignments[faction];
-        if (!assignment) return;
-        assignment.passed = !assignment.passed;
-        renderBoard();
-      });
-    }
-
-    const everyonePassed =
-      selectedFactions.length > 0 &&
-      selectedFactions.every((faction) => state.assignments[faction]?.passed);
-    roundActions.innerHTML = everyonePassed
-      ? `<button type="button" id="tracker-reset-round" class="tracker-reset-button">Reset for Next Round</button>`
-      : "";
-
-    const resetButton =
-      roundActions.querySelector<HTMLButtonElement>("#tracker-reset-round");
-    resetButton?.addEventListener("click", () => {
-      state.assignments = {};
-      renderBoard();
-    });
-  };
-
-  expansionField.addEventListener("change", () => {
-    state.expansion = expansionField.value as Mode;
-    state.selectedFactions = Array.from(
-      { length: state.playerCount },
-      (_, index) =>
-        factionsByMode[state.expansion]?.includes(
-          state.selectedFactions[index] ?? "",
-        )
-          ? (state.selectedFactions[index] ?? "")
-          : "",
-    );
-    syncAssignmentsToSelections();
-    renderRows();
-    renderBoard();
-  });
-
-  playerCountField.addEventListener("change", () => {
-    state.playerCount = Number.parseInt(playerCountField.value, 10) || 6;
-    state.selectedFactions = Array.from(
-      { length: state.playerCount },
-      (_, index) => state.selectedFactions[index] ?? "",
-    );
-    syncAssignmentsToSelections();
-    renderRows();
-    renderBoard();
-  });
-
-  speakerField.addEventListener("change", () => {
-    state.speakerSeat = Number.parseInt(speakerField.value, 10) || 0;
-    renderBoard();
-  });
-
-  renderRows();
-  renderBoard();
-}
-
 export function generateTrackerRoomCode(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID().slice(0, 8);
@@ -1146,8 +754,9 @@ export function bindTurnTracker(
     trackerRoot.querySelectorAll<HTMLElement>(".tracker-pane");
   const expansionField =
     trackerRoot.querySelector<HTMLSelectElement>("#tracker-expansion");
-  const playerCountField =
-    trackerRoot.querySelector<HTMLSelectElement>("#tracker-player-count");
+  const playerCountField = trackerRoot.querySelector<HTMLSelectElement>(
+    "#tracker-player-count",
+  );
   const speakerField =
     trackerRoot.querySelector<HTMLSelectElement>("#tracker-speaker");
   const trackerList = trackerRoot.querySelector<HTMLElement>("#tracker-list");
@@ -1159,14 +768,16 @@ export function bindTurnTracker(
   );
   const roomCodeField =
     trackerRoot.querySelector<HTMLInputElement>("#tracker-room-code");
-  const createRoomButton =
-    trackerRoot.querySelector<HTMLButtonElement>("#tracker-create-room");
+  const createRoomButton = trackerRoot.querySelector<HTMLButtonElement>(
+    "#tracker-create-room",
+  );
   const joinRoomButton =
     trackerRoot.querySelector<HTMLButtonElement>("#tracker-join-room");
   const copyRoomButton =
     trackerRoot.querySelector<HTMLButtonElement>("#tracker-copy-room");
-  const leaveRoomButton =
-    trackerRoot.querySelector<HTMLButtonElement>("#tracker-leave-room");
+  const leaveRoomButton = trackerRoot.querySelector<HTMLButtonElement>(
+    "#tracker-leave-room",
+  );
   const collabStatus = trackerRoot.querySelector<HTMLElement>(
     "#tracker-collab-status",
   );
@@ -1176,8 +787,9 @@ export function bindTurnTracker(
   const importStateButton = trackerRoot.querySelector<HTMLButtonElement>(
     "#tracker-import-state",
   );
-  const transferJsonField =
-    trackerRoot.querySelector<HTMLTextAreaElement>("#tracker-transfer-json");
+  const transferJsonField = trackerRoot.querySelector<HTMLTextAreaElement>(
+    "#tracker-transfer-json",
+  );
   const transferStatus = trackerRoot.querySelector<HTMLElement>(
     "#tracker-transfer-status",
   );
@@ -1201,17 +813,15 @@ export function bindTurnTracker(
     !transferJsonField ||
     !transferStatus
   ) {
-    bindTurnTrackerLegacy(trackerRoot);
     return;
   }
 
+  const initialPlayerCount = Number.parseInt(playerCountField.value, 10);
+
   const state: TrackerState = {
     expansion: expansionField.value as Mode,
-    playerCount: Number.parseInt(playerCountField.value, 10) || 6,
-    selectedFactions: Array.from(
-      { length: Number.parseInt(playerCountField.value, 10) || 6 },
-      () => "",
-    ),
+    playerCount: initialPlayerCount,
+    selectedFactions: Array.from({ length: initialPlayerCount }, () => ""),
     assignments: {},
     draggingFaction: null,
     speakerSeat: 0,
@@ -1226,7 +836,6 @@ export function bindTurnTracker(
     "Export creates a portable snapshot. Import applies that snapshot locally and creates a fresh shared room.";
 
   const updateUrlRoom = (nextRoomId: string) => {
-    if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
     if (nextRoomId) {
       url.searchParams.set("trackerRoom", nextRoomId);
@@ -1237,7 +846,7 @@ export function bindTurnTracker(
   };
 
   const getSelectedFactions = () => state.selectedFactions.filter(Boolean);
-  const getSpeakerFaction = () => state.selectedFactions[state.speakerSeat] ?? "";
+  const getSpeakerFaction = () => state.selectedFactions[state.speakerSeat];
   const getFactionSeat = (faction: string) =>
     state.selectedFactions.indexOf(faction);
   const getSpeakerOrderedFactions = () =>
@@ -1261,14 +870,16 @@ export function bindTurnTracker(
   };
   const syncAssignmentsToSelections = () => {
     const validSelections = new Set(getSelectedFactions());
-    for (const faction of Object.keys(state.assignments)) {
-      if (!validSelections.has(faction)) delete state.assignments[faction];
-    }
+    state.assignments = Object.fromEntries(
+      Object.entries(state.assignments).filter(([faction]) =>
+        validSelections.has(faction),
+      ),
+    );
   };
   const getFactionAtSlot = (slot: number) =>
     Object.entries(state.assignments).find(
       ([, assignment]) => assignment.slot === slot,
-    )?.[0] ?? null;
+    )?.[0];
   const assignFactionToSlot = (faction: string, slot: number) => {
     if (!faction || !canAssignFactionToSlot(faction, slot)) return;
     const occupiedFaction = getFactionAtSlot(slot);
@@ -1373,7 +984,7 @@ export function bindTurnTracker(
       const fallbackSpeaker = state.selectedFactions.findIndex((faction) =>
         Boolean(faction),
       );
-      state.speakerSeat = fallbackSpeaker >= 0 ? fallbackSpeaker : 0;
+      state.speakerSeat = Math.max(fallbackSpeaker, 0);
     }
     speakerField.disabled = false;
     speakerField.value = String(state.speakerSeat);
@@ -1405,12 +1016,12 @@ export function bindTurnTracker(
   const renderRows = () => {
     expansionField.value = state.expansion;
     playerCountField.value = String(state.playerCount);
-    const availableFactions = factionsByMode[state.expansion] ?? [];
+    const availableFactions = factionsByMode[state.expansion];
     trackerList.innerHTML = Array.from(
       { length: state.playerCount },
       (_, index) => {
         const playerNumber = index + 1;
-        const selectedFaction = state.selectedFactions[index] ?? "";
+        const selectedFaction = state.selectedFactions[index]!;
         const selectedByOthers = new Set(
           state.selectedFactions.filter(
             (faction, factionIndex) => factionIndex !== index && faction,
@@ -1440,7 +1051,7 @@ export function bindTurnTracker(
       ".tracker-faction-select",
     )) {
       select.addEventListener("change", () => {
-        const index = Number.parseInt(select.dataset.factionIndex ?? "0", 10);
+        const index = Number.parseInt(select.dataset.factionIndex!, 10);
         const previousFaction = state.selectedFactions[index];
         state.selectedFactions[index] = select.value;
         if (previousFaction && previousFaction !== select.value) {
@@ -1461,17 +1072,20 @@ export function bindTurnTracker(
       (faction) => !state.assignments[faction],
     );
     trackerPool.innerHTML = unassignedFactions.length
-      ? unassignedFactions.map((faction) => renderDraggableFaction(faction)).join("")
+      ? unassignedFactions
+          .map((faction) => renderDraggableFaction(faction))
+          .join("")
       : `<p class="tracker-pool-empty">All selected factions are assigned to the board.</p>`;
-    for (const chip of trackerPool.querySelectorAll<HTMLElement>(".tracker-chip")) {
-      bindDragSource(chip, chip.dataset.factionName ?? "");
+    for (const chip of trackerPool.querySelectorAll<HTMLElement>(
+      ".tracker-chip",
+    )) {
+      bindDragSource(chip, chip.dataset.factionName!);
     }
 
     strategyBoard.innerHTML = Array.from({ length: 9 }, (_, index) => {
       const slot = index;
       const card = strategyCards.find((entry) => entry.initiative === slot);
-      const title =
-        slot === 0 ? "Naalu Token" : card?.name ?? `Strategy Card ${slot}`;
+      const title = slot === 0 ? "Naalu Token" : card!.name;
       const activeFaction =
         Object.entries(state.assignments).find(
           ([, assignment]) => assignment.slot === slot && !assignment.passed,
@@ -1492,7 +1106,7 @@ export function bindTurnTracker(
                 activeFaction
                   ? renderDraggableFaction(
                       activeFaction,
-                      state.assignments[activeFaction] ?? null,
+                      state.assignments[activeFaction]!,
                     )
                   : `<p class="strategy-placeholder">${slot === 0 ? "Drop Naalu here" : "Drop faction here"}</p>`
               }
@@ -1504,7 +1118,7 @@ export function bindTurnTracker(
                 passedFaction
                   ? renderDraggableFaction(
                       passedFaction,
-                      state.assignments[passedFaction] ?? null,
+                      state.assignments[passedFaction]!,
                     )
                   : `<p class="strategy-placeholder">None</p>`
               }
@@ -1518,19 +1132,20 @@ export function bindTurnTracker(
     )) {
       bindDropTarget(
         dropTarget,
-        Number.parseInt(dropTarget.dataset.dropSlot ?? "0", 10),
+        Number.parseInt(dropTarget.dataset.dropSlot!, 10),
       );
     }
-    for (const chip of strategyBoard.querySelectorAll<HTMLElement>(".tracker-chip")) {
-      bindDragSource(chip, chip.dataset.factionName ?? "");
+    for (const chip of strategyBoard.querySelectorAll<HTMLElement>(
+      ".tracker-chip",
+    )) {
+      bindDragSource(chip, chip.dataset.factionName!);
     }
     for (const button of strategyBoard.querySelectorAll<HTMLButtonElement>(
       ".tracker-chip-action",
     )) {
       button.addEventListener("click", () => {
-        const faction = button.dataset.passFaction ?? "";
-        const assignment = state.assignments[faction];
-        if (!assignment) return;
+        const faction = button.dataset.passFaction!;
+        const assignment = state.assignments[faction]!;
         assignment.passed = !assignment.passed;
         renderBoard();
         publishState();
@@ -1635,14 +1250,21 @@ export function bindTurnTracker(
   };
 
   const exportTrackerState = () => {
-    transferJsonField.value = JSON.stringify(buildTrackerExportPayload(state), null, 2);
+    transferJsonField.value = JSON.stringify(
+      buildTrackerExportPayload(state),
+      null,
+      2,
+    );
     updateTransferStatus("Tracker state exported to the text box.");
   };
 
   const importTrackerState = async () => {
     const rawPayload = transferJsonField.value.trim();
     if (!rawPayload) {
-      updateTransferStatus("Paste exported tracker JSON before importing.", "is-error");
+      updateTransferStatus(
+        "Paste exported tracker JSON before importing.",
+        "is-error",
+      );
       return;
     }
     try {
@@ -1693,29 +1315,30 @@ export function bindTurnTracker(
     state.expansion = expansionField.value as Mode;
     state.selectedFactions = Array.from(
       { length: state.playerCount },
-      (_, index) =>
-        factionsByMode[state.expansion]?.includes(
-          state.selectedFactions[index] ?? "",
-        )
-          ? (state.selectedFactions[index] ?? "")
-          : "",
+      (_, index) => {
+        const selectedFaction = state.selectedFactions[index];
+        return selectedFaction &&
+          factionsByMode[state.expansion].includes(selectedFaction)
+          ? selectedFaction
+          : "";
+      },
     );
     syncAssignmentsToSelections();
     renderAll();
     publishState();
   });
   playerCountField.addEventListener("change", () => {
-    state.playerCount = Number.parseInt(playerCountField.value, 10) || 6;
+    state.playerCount = Number.parseInt(playerCountField.value, 10);
     state.selectedFactions = Array.from(
       { length: state.playerCount },
-      (_, index) => state.selectedFactions[index] ?? "",
+      (_, index) => state.selectedFactions[index] || "",
     );
     syncAssignmentsToSelections();
     renderAll();
     publishState();
   });
   speakerField.addEventListener("change", () => {
-    state.speakerSeat = Number.parseInt(speakerField.value, 10) || 0;
+    state.speakerSeat = Number.parseInt(speakerField.value, 10);
     renderBoard();
     publishState();
   });

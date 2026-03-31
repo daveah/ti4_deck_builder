@@ -354,7 +354,10 @@ select {
   color: var(--ink);
   padding: 0.9rem 1rem;
   resize: vertical;
-  font: 0.92rem/1.45 Consolas, "Courier New", monospace;
+  font:
+    0.92rem/1.45 Consolas,
+    "Courier New",
+    monospace;
 }
 .tracker-transfer-status {
   margin: 0;
