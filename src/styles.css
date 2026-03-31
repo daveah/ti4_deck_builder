@@ -194,6 +194,91 @@ select {
 .strategy-board-header h3 {
   font-family: "Palatino Linotype", "Book Antiqua", serif;
 }
+.tracker-collab-shell {
+  display: grid;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.tracker-collab-copy h3,
+.tracker-collab-copy p {
+  margin: 0;
+}
+.tracker-collab-copy p {
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.tracker-collab-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 240px) 1fr;
+  gap: 0.8rem;
+  align-items: end;
+}
+.tracker-collab-field {
+  display: grid;
+  gap: 0.45rem;
+}
+.tracker-collab-field span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.tracker-collab-field input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  padding: 0.8rem 0.9rem;
+}
+.tracker-collab-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.tracker-collab-buttons button {
+  border: 0;
+  border-radius: 14px;
+  padding: 0.75rem 0.95rem;
+  font-weight: 700;
+  color: #09111d;
+  background: linear-gradient(135deg, var(--gold), #ffdca0);
+  cursor: pointer;
+}
+.tracker-collab-buttons .tracker-secondary-button {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.tracker-collab-status {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.tracker-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.tracker-status-pill.is-connected {
+  background: rgba(89, 193, 125, 0.16);
+  border-color: rgba(89, 193, 125, 0.35);
+}
+.tracker-status-pill.is-connecting {
+  background: rgba(121, 165, 255, 0.16);
+  border-color: rgba(121, 165, 255, 0.35);
+}
+.tracker-status-pill.is-error {
+  background: rgba(240, 103, 103, 0.16);
+  border-color: rgba(240, 103, 103, 0.35);
+}
 .tracker-tabs {
   display: flex;
   gap: 0.75rem;
@@ -215,6 +300,68 @@ select {
 }
 .tracker-pane[hidden] {
   display: none;
+}
+.tracker-transfer-shell {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.tracker-transfer-copy h3,
+.tracker-transfer-copy p {
+  margin: 0;
+}
+.tracker-transfer-copy p:last-child {
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.tracker-transfer-actions {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+.tracker-transfer-actions button {
+  border: 0;
+  border-radius: 14px;
+  padding: 0.75rem 0.95rem;
+  font-weight: 700;
+  color: #09111d;
+  background: linear-gradient(135deg, var(--gold), #ffdca0);
+  cursor: pointer;
+}
+.tracker-transfer-actions .tracker-secondary-button {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.tracker-transfer-field {
+  display: grid;
+  gap: 0.45rem;
+}
+.tracker-transfer-field span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.tracker-transfer-field textarea {
+  width: 100%;
+  min-height: 22rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  padding: 0.9rem 1rem;
+  resize: vertical;
+  font: 0.92rem/1.45 Consolas, "Courier New", monospace;
+}
+.tracker-transfer-status {
+  margin: 0;
+  color: var(--muted);
+}
+.tracker-transfer-status.is-error {
+  color: #ffb4aa;
 }
 .tracker-controls {
   display: grid;
@@ -717,8 +864,10 @@ select {
   .deck-form,
   .preview-card,
   .tracker-controls,
+  .tracker-collab-controls,
   .strategy-slot-row,
-  .strategy-lanes {
+  .strategy-lanes,
+  .strategy-board-columns {
     grid-template-columns: 1fr;
   }
 }

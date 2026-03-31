@@ -53,16 +53,72 @@ uv run python .\ti4_deck_builder.py --mode thunders_edge --players 8 --setup sta
 
 ```powershell
 npm install
-npm run dev
+npm run dev:web
+npm run dev:party
 ```
 
-Then open the local Vite URL in your browser.
+Then open the local Vite URL in your browser. For the shared turn-tracker room feature, keep `npm run dev:party` running as well so the PartyKit room server is available on `localhost:1999`.
 
 To build the production version:
 
 ```powershell
-npm run build
+npm run build:web
 ```
+
+### Shared Turn Tracker
+
+The turn tracker can now run in a shared room:
+
+1. One player clicks `Create Shared Room`
+2. The app generates a room code and joins it
+3. That player clicks `Copy Link`
+4. Other players open the copied link and join the same live tracker
+
+Shared tracker state includes:
+
+- expansion
+- player count
+- selected factions
+- speaker
+- strategy-card assignments
+- passed state
+
+PartyKit configuration lives in [partykit.json](C:\Users\dave\dev\ti4_deck_builder\partykit.json), and the room server is implemented in [tracker.ts](C:\Users\dave\dev\ti4_deck_builder\party\tracker.ts).
+
+## Production Deploy
+
+Production now has separate deploy steps for the static web app and the shared tracker backend:
+
+```powershell
+npm run deploy:web
+npm run deploy:party
+```
+
+Or run both in sequence:
+
+```powershell
+npm run deploy:prod
+```
+
+Recommended production setup:
+
+1. Deploy the static app to your website with `npm run deploy:web`
+2. Deploy the PartyKit tracker backend with `npm run deploy:party`
+3. Set `VITE_PARTYKIT_HOST` to your deployed PartyKit hostname before building the web app
+
+Example:
+
+```powershell
+$env:VITE_PARTYKIT_HOST = "your-project.your-name.partykit.dev"
+npm run deploy:prod
+```
+
+Notes:
+
+- `deploy:web` and `deploy:webdav` are the same command
+- `deploy:web` still uses the WebDAV environment variables described below
+- `deploy:prod` runs the web deploy first, then the PartyKit deploy
+- local PartyKit state under `.partykit/` is ignored by git
 
 ### JSON board layouts
 

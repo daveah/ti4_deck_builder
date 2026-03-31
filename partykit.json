@@ -1,0 +1,5 @@
+{
+  "name": "ti4-deck-builder",
+  "main": "party/tracker.ts",
+  "compatibilityDate": "2026-03-30"
+}
