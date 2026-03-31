@@ -1,5 +1,9 @@
 # TI4 Deck Builder
 
+Check this out at https://ti4.dah.me.uk/
+
+## Summary
+
 This project now includes:
 
 - a Python CLI in `ti4_deck_builder.py`
