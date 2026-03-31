@@ -10,6 +10,9 @@ const cases: Array<{
 }> = [
   { mode: "base", players: 6, setup: "standard", seed: 7 },
   { mode: "pok", players: 5, setup: "hyperlanes", seed: 42 },
+  { mode: "pok", players: 6, setup: "large", seed: 17 },
+  { mode: "pok", players: 7, setup: "alternate", seed: 3 },
+  { mode: "pok", players: 8, setup: "alternate", seed: 31 },
   { mode: "thunders_edge", players: 8, setup: "standard", seed: 11 },
 ];
 

@@ -64,18 +64,30 @@
       "standard": {
         "per_player": { "blue": 3, "red": 2 },
         "shared": { "blue": 0, "red": 0 }
+      },
+      "large": {
+        "per_player": { "blue": 6, "red": 3 },
+        "shared": { "blue": 0, "red": 0 }
       }
     },
     "7": {
       "hyperlanes": {
         "per_player": { "blue": 4, "red": 2 },
         "shared": { "blue": 3, "red": 2 }
+      },
+      "alternate": {
+        "per_player": { "blue": 3, "red": 2 },
+        "shared": { "blue": 0, "red": 0 }
       }
     },
     "8": {
       "standard": {
         "per_player": { "blue": 4, "red": 2 },
         "shared": { "blue": 2, "red": 2 }
+      },
+      "alternate": {
+        "per_player": { "blue": 3, "red": 2 },
+        "shared": { "blue": 0, "red": 0 }
       }
     }
   }
