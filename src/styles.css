@@ -42,6 +42,28 @@ select {
   margin: 0 auto;
   padding: 2rem 0 4rem;
 }
+.app-tabs {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.app-tab {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  cursor: pointer;
+}
+.app-tab.is-active {
+  background: rgba(255, 207, 112, 0.16);
+  border-color: rgba(255, 207, 112, 0.45);
+  color: var(--gold);
+}
+.app-pane[hidden] {
+  display: none;
+}
 .hero {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
@@ -156,6 +178,119 @@ select {
     rgba(255, 255, 255, 0.02)
   );
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.tracker-shell {
+  padding: 1.5rem;
+  background: var(--panel);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  border-radius: 28px;
+}
+.tracker-topline {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: start;
+}
+.tracker-topline h2,
+.tracker-summary strong {
+  font-family: "Palatino Linotype", "Book Antiqua", serif;
+}
+.tracker-summary {
+  display: grid;
+  gap: 0.65rem;
+}
+.tracker-summary span {
+  display: inline-flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+.tracker-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 220px)) 1fr;
+  gap: 1rem;
+  margin: 1.25rem 0 1rem;
+  align-items: end;
+}
+.tracker-controls label {
+  display: grid;
+  gap: 0.45rem;
+}
+.tracker-controls span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.tracker-controls input,
+.tracker-controls select {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  padding: 0.8rem 0.9rem;
+}
+.tracker-button-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.tracker-button-row button,
+.tracker-set-active {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 0.8rem 0.95rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  cursor: pointer;
+}
+.tracker-list {
+  display: grid;
+  gap: 0.85rem;
+}
+.tracker-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.tracker-row.is-active {
+  background: rgba(255, 207, 112, 0.12);
+  border-color: rgba(255, 207, 112, 0.35);
+}
+.tracker-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex: 1;
+}
+.tracker-seat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--gold);
+  font-weight: 700;
+}
+.tracker-name-input {
+  width: 100%;
+  max-width: 24rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  padding: 0.8rem 0.9rem;
 }
 .preview-copy h3 {
   margin: 0;
@@ -397,7 +532,9 @@ select {
   .info-grid,
   .detail-panels,
   .deck-form,
-  .preview-card {
+  .preview-card,
+  .tracker-topline,
+  .tracker-controls {
     grid-template-columns: 1fr;
   }
 }
