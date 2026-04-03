@@ -340,6 +340,8 @@ describe("app helpers", () => {
     const html = renderTurnTracker(4);
     expect(html).toContain("Turn Order Tracker");
     expect(html).toContain("Shared Room");
+    expect(html).toContain("Tracker Introduction");
+    expect(html).toContain('class="tracker-accordion" open');
     expect(html).toContain('id="tracker-room-code"');
     expect(html).toContain('id="tracker-expansion"');
     expect(html).toContain('id="tracker-player-count"');
@@ -536,6 +538,45 @@ describe("app helpers", () => {
       host.querySelector<HTMLElement>('[data-tracker-tab-panel="factions"]')
         ?.hidden,
     ).toBe(true);
+  });
+
+  it("auto-switches to the strategy tab on small screens once factions are fully selected", () => {
+    const originalInnerWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      value: 480,
+      configurable: true,
+    });
+
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const selections = [
+      "The Federation of Sol",
+      "The Arborec",
+      "The Naalu Collective",
+    ];
+    for (const [index, faction] of selections.entries()) {
+      const select = host.querySelector<HTMLSelectElement>(
+        `[data-faction-index="${index}"]`,
+      )!;
+      select.value = faction;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    const strategyTab = Array.from(
+      host.querySelectorAll<HTMLButtonElement>(".tracker-tab"),
+    ).find((button) => button.dataset.trackerTabTarget === "strategy");
+    expect(strategyTab?.classList.contains("is-active")).toBe(true);
+    expect(
+      host.querySelector<HTMLElement>('[data-tracker-tab-panel="strategy"]')
+        ?.hidden,
+    ).toBe(false);
+
+    Object.defineProperty(window, "innerWidth", {
+      value: originalInnerWidth,
+      configurable: true,
+    });
   });
 
   it("drags factions onto the strategy board, passes them, and resets the round", () => {
@@ -1076,6 +1117,83 @@ describe("app helpers", () => {
         '.strategy-lane-active[data-drop-slot="1"] .tracker-chip',
       ),
     ).toBeNull();
+  });
+
+  it("renders configured short faction names inside tracker chips", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const firstFaction = host.querySelector<HTMLSelectElement>(
+      '[data-faction-index="0"]',
+    )!;
+    firstFaction.value = "The Barony of Letnev";
+    firstFaction.dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(host.innerHTML).toContain("tracker-chip-label-full");
+    expect(host.innerHTML).toContain("The Barony of Letnev");
+    expect(host.innerHTML).toContain("tracker-chip-label-short");
+    expect(host.innerHTML).toContain(">Letnev<");
+  });
+
+  it("falls back to the full faction name when no short name is configured", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    const socket = new FakeTrackerSocket();
+    bindTurnTracker(
+      host,
+      vi.fn(async () => socket),
+    );
+
+    host.querySelector<HTMLInputElement>("#tracker-room-code")!.value =
+      "custom1";
+    host
+      .querySelector<HTMLButtonElement>("#tracker-join-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    await Promise.resolve();
+    socket.emit("open", new Event("open"));
+    socket.emit(
+      "message",
+      new MessageEvent("message", {
+        data: JSON.stringify({
+          type: "snapshot",
+          state: {
+            expansion: "base",
+            playerCount: 3,
+            selectedFactions: ["Custom Faction", "", ""],
+            assignments: {},
+            speakerSeat: 0,
+          },
+        }),
+      }),
+    );
+
+    expect(host.innerHTML).toContain(">Custom Faction<");
+  });
+
+  it("falls back to the factions tab if a tracker tab button has no target", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const strategyTab = Array.from(
+      host.querySelectorAll<HTMLButtonElement>(".tracker-tab"),
+    ).find((button) => button.dataset.trackerTabTarget === "strategy")!;
+    strategyTab.click();
+    expect(
+      host.querySelector<HTMLElement>('[data-tracker-tab-panel="strategy"]')
+        ?.hidden,
+    ).toBe(false);
+
+    const malformedTab =
+      host.querySelectorAll<HTMLButtonElement>(".tracker-tab")[0]!;
+    delete malformedTab.dataset.trackerTabTarget;
+    malformedTab.click();
+
+    expect(
+      host.querySelector<HTMLElement>('[data-tracker-tab-panel="factions"]')
+        ?.hidden,
+    ).toBe(false);
   });
 
   it("gracefully skips turn tracker binding if controls are missing", () => {
