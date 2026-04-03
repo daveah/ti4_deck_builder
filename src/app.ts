@@ -7,6 +7,7 @@ import {
   type Mode,
 } from "./deckBuilder";
 import factionsJson from "../data/factions.json";
+import factionShortNamesJson from "../data/faction_short_names.json";
 import strategyCardsJson from "../data/strategy_cards.json";
 import layoutsJson from "./layouts.json";
 
@@ -71,6 +72,7 @@ export type LayoutFile = {
 
 const layoutFile = layoutsJson as LayoutFile;
 const factionsByMode = factionsJson as Record<Mode, string[]>;
+const factionShortNames = factionShortNamesJson as Record<string, string>;
 const strategyCards = strategyCardsJson as Array<{
   initiative: number;
   name: string;
@@ -535,35 +537,43 @@ export function renderTurnTracker(playerCount = 6): string {
 
   return `
     <section class="tracker-shell">
-      <div class="tracker-topline">
-        <div>
-          <p class="eyebrow">Turn Order Tracker</p>
-          <h2>Set the factions at the table, then track strategy cards in initiative order.</h2>
-          <p class="lede">Choose the expansion, assign each player a unique faction, then switch to the strategy board to manage initiative, passing, and round resets.</p>
-        </div>
-      </div>
-      <section class="tracker-collab-shell">
-        <div class="tracker-collab-copy">
-          <h3>Shared Room</h3>
-          <p>Create a room code for the table, then have everyone else join with the same code to keep the tracker in sync live.</p>
-        </div>
-        <div class="tracker-collab-controls">
-          <label class="tracker-collab-field">
-            <span>Room Code</span>
-            <input id="tracker-room-code" type="text" placeholder="Create or paste a code" />
-          </label>
-          <div class="tracker-collab-buttons">
-            <button type="button" id="tracker-create-room">Create Shared Room</button>
-            <button type="button" id="tracker-join-room">Join Room</button>
-            <button type="button" id="tracker-copy-room" class="tracker-secondary-button">Copy Link</button>
-            <button type="button" id="tracker-leave-room" class="tracker-secondary-button">Leave Room</button>
+      <details class="tracker-accordion" open>
+        <summary class="tracker-accordion-summary">Tracker Introduction</summary>
+        <div class="tracker-accordion-content tracker-topline">
+          <div>
+            <p class="eyebrow">Turn Order Tracker</p>
+            <h2>Set the factions at the table, then track strategy cards in initiative order.</h2>
+            <p class="lede">Choose the expansion, assign each player a unique faction, then switch to the strategy board to manage initiative, passing, and round resets.</p>
           </div>
         </div>
-        <div id="tracker-collab-status" class="tracker-collab-status">
-          <span class="tracker-status-pill">Local only</span>
-          <span id="tracker-presence-count">Not shared</span>
+      </details>
+      <details class="tracker-accordion" open>
+        <summary class="tracker-accordion-summary">Shared Room</summary>
+        <div class="tracker-accordion-content">
+          <section class="tracker-collab-shell">
+            <div class="tracker-collab-copy">
+              <h3>Shared Room</h3>
+              <p>Create a room code for the table, then have everyone else join with the same code to keep the tracker in sync live.</p>
+            </div>
+            <div class="tracker-collab-controls">
+              <label class="tracker-collab-field">
+                <span>Room Code</span>
+                <input id="tracker-room-code" type="text" placeholder="Create or paste a code" />
+              </label>
+              <div class="tracker-collab-buttons">
+                <button type="button" id="tracker-create-room">Create Shared Room</button>
+                <button type="button" id="tracker-join-room">Join Room</button>
+                <button type="button" id="tracker-copy-room" class="tracker-secondary-button">Copy Link</button>
+                <button type="button" id="tracker-leave-room" class="tracker-secondary-button">Leave Room</button>
+              </div>
+            </div>
+            <div id="tracker-collab-status" class="tracker-collab-status">
+              <span class="tracker-status-pill">Local only</span>
+              <span id="tracker-presence-count">Not shared</span>
+            </div>
+          </section>
         </div>
-      </section>
+      </details>
       <div class="tracker-tabs" role="tablist" aria-label="Tracker views">
         <button type="button" class="tracker-tab is-active" data-tracker-tab-target="factions" aria-selected="true">Faction Setup</button>
         <button type="button" class="tracker-tab" data-tracker-tab-target="strategy" aria-selected="false">Strategy Board</button>
@@ -832,6 +842,7 @@ export function bindTurnTracker(
   let connectionCount = 0;
   let socket: TrackerSocketLike | null = null;
   let applyingRemoteState = false;
+  let activeTrackerTab = "factions";
   let transferMessage =
     "Export creates a portable snapshot. Import applies that snapshot locally and creates a fresh shared room.";
 
@@ -846,6 +857,11 @@ export function bindTurnTracker(
   };
 
   const getSelectedFactions = () => state.selectedFactions.filter(Boolean);
+  const allSeatsAssigned = () =>
+    state.selectedFactions.length > 0 &&
+    state.selectedFactions.every((faction) => Boolean(faction));
+  const isCompactTrackerViewport = () =>
+    typeof window !== "undefined" && window.innerWidth <= 720;
   const getSpeakerFaction = () => state.selectedFactions[state.speakerSeat];
   const getFactionSeat = (faction: string) =>
     state.selectedFactions.indexOf(faction);
@@ -905,9 +921,13 @@ export function bindTurnTracker(
     const passed = assignment?.passed ?? false;
     const speaker = faction === getSpeakerFaction();
     const seat = getFactionSeat(faction);
+    const shortFactionName = factionShortNames[faction] ?? faction;
     return `
-      <div class="tracker-chip${passed ? " is-passed" : ""}${speaker ? " is-speaker" : ""}" draggable="true" data-faction-name="${faction}">
-        <span class="tracker-chip-label">${faction}</span>
+      <div class="tracker-chip${passed ? " is-passed" : ""}${speaker ? " is-speaker" : ""}" draggable="true" data-faction-name="${faction}" title="${faction}">
+        <span class="tracker-chip-label">
+          <span class="tracker-chip-label-full">${faction}</span>
+          <span class="tracker-chip-label-short">${shortFactionName}</span>
+        </span>
         <span class="tracker-chip-seat">P${seat + 1}</span>
         ${
           assignment
@@ -1170,6 +1190,27 @@ export function bindTurnTracker(
     renderRows();
     renderBoard();
     updateCollaborationStatus();
+    if (
+      activeTrackerTab === "factions" &&
+      isCompactTrackerViewport() &&
+      allSeatsAssigned()
+    ) {
+      activateTrackerTab("strategy");
+    }
+  };
+
+  const activateTrackerTab = (target: string) => {
+    activeTrackerTab = target;
+    for (const tabButton of trackerTabs) {
+      const active = tabButton.dataset.trackerTabTarget === target;
+      tabButton.classList.toggle("is-active", active);
+      tabButton.setAttribute("aria-selected", active ? "true" : "false");
+    }
+    for (const pane of trackerPanes) {
+      const active = pane.dataset.trackerTabPanel === target;
+      pane.hidden = !active;
+      pane.classList.toggle("is-active", active);
+    }
   };
 
   const handleServerMessage = (rawMessage: string) => {
@@ -1297,17 +1338,7 @@ export function bindTurnTracker(
 
   for (const button of trackerTabs) {
     button.addEventListener("click", () => {
-      const target = button.dataset.trackerTabTarget;
-      for (const tabButton of trackerTabs) {
-        const active = tabButton === button;
-        tabButton.classList.toggle("is-active", active);
-        tabButton.setAttribute("aria-selected", active ? "true" : "false");
-      }
-      for (const pane of trackerPanes) {
-        const active = pane.dataset.trackerTabPanel === target;
-        pane.hidden = !active;
-        pane.classList.toggle("is-active", active);
-      }
+      activateTrackerTab(button.dataset.trackerTabTarget ?? "factions");
     });
   }
 

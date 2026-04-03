@@ -187,8 +187,39 @@ select {
   box-shadow: var(--shadow);
   border-radius: 28px;
 }
+.tracker-accordion {
+  margin-bottom: 0.9rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.tracker-accordion-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tracker-accordion-summary::-webkit-details-marker {
+  display: none;
+}
+.tracker-accordion-summary::after {
+  content: "+";
+  font-size: 1rem;
+  color: var(--gold);
+}
+.tracker-accordion[open] .tracker-accordion-summary::after {
+  content: "-";
+}
+.tracker-accordion-content {
+  padding: 0 1rem 1rem;
+}
 .tracker-topline {
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 }
 .tracker-topline h2,
 .strategy-board-header h3 {
@@ -197,11 +228,8 @@ select {
 .tracker-collab-shell {
   display: grid;
   gap: 0.9rem;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0;
+  padding: 0;
 }
 .tracker-collab-copy h3,
 .tracker-collab-copy p {
@@ -588,10 +616,14 @@ select {
   background: rgba(255, 207, 112, 0.12);
 }
 .tracker-chip-label {
+  display: inline-flex;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.tracker-chip-label-short {
+  display: none;
 }
 .tracker-chip-seat {
   display: inline-flex;
@@ -867,10 +899,147 @@ select {
   .deck-form,
   .preview-card,
   .tracker-controls,
-  .tracker-collab-controls,
-  .strategy-slot-row,
-  .strategy-lanes,
-  .strategy-board-columns {
+  .tracker-collab-controls {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .tracker-shell {
+    padding: 0.9rem;
+  }
+  .tracker-accordion-summary {
+    padding: 0.7rem 0.85rem;
+    font-size: 0.95rem;
+  }
+  .tracker-accordion-content {
+    padding: 0 0.85rem 0.85rem;
+  }
+  .tracker-topline h2 {
+    font-size: 1.2rem;
+  }
+  .tracker-topline .lede,
+  .tracker-collab-copy p,
+  .strategy-board-intro,
+  .tracker-pool-head p {
+    font-size: 0.84rem;
+  }
+  .tracker-tabs {
+    gap: 0.45rem;
+    margin-bottom: 0.8rem;
+  }
+  .tracker-tab {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.88rem;
+  }
+  .strategy-toolbar {
+    margin-top: 0.55rem;
+  }
+  .tracker-pool-shell {
+    margin-top: 0.55rem;
+    padding: 0.65rem 0.75rem;
+  }
+  .tracker-pool {
+    gap: 0.45rem;
+    margin-top: 0.5rem;
+  }
+  .strategy-board-columns,
+  .strategy-slot-row {
+    grid-template-columns: 1.9rem minmax(88px, 108px) minmax(0, 1fr) minmax(
+        0,
+        1fr
+      );
+    gap: 0.38rem;
+  }
+  .strategy-board-columns {
+    margin: 0.55rem 0 0.25rem;
+    padding: 0 0.1rem;
+  }
+  .strategy-board-column-label {
+    font-size: 0.66rem;
+    letter-spacing: 0.05em;
+  }
+  .strategy-slot {
+    padding: 0.4rem 0.45rem;
+    border-radius: 14px;
+  }
+  .strategy-number {
+    width: 1.65rem;
+    height: 1.65rem;
+    font-size: 0.78rem;
+  }
+  .strategy-copy h3 {
+    font-size: 0.8rem;
+    line-height: 1.15;
+  }
+  .strategy-lane {
+    min-height: 42px;
+    border-radius: 12px;
+  }
+  .strategy-lane-body {
+    min-height: 31px;
+    padding: 0.2rem 0.25rem;
+  }
+  .strategy-placeholder {
+    font-size: 0.72rem;
+  }
+  .tracker-chip {
+    gap: 0.35rem;
+    padding: 0.28rem 0.42rem;
+    font-size: 0.73rem;
+  }
+  .tracker-chip-seat {
+    min-width: 1.45rem;
+    padding: 0.03rem 0.26rem;
+    font-size: 0.64rem;
+  }
+  .tracker-chip-action {
+    padding: 0.16rem 0.38rem;
+    font-size: 0.67rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .page-shell {
+    width: min(100%, calc(100% - 0.8rem));
+    padding: 1rem 0 2rem;
+  }
+  .tracker-shell {
+    padding: 0.7rem;
+    border-radius: 22px;
+  }
+  .strategy-board-columns,
+  .strategy-slot-row {
+    grid-template-columns: 1.7rem minmax(74px, 94px) minmax(0, 1fr) minmax(
+        0,
+        1fr
+      );
+    gap: 0.26rem;
+  }
+  .strategy-copy h3 {
+    font-size: 0.72rem;
+  }
+  .strategy-lane {
+    min-height: 38px;
+  }
+  .strategy-lane-body {
+    min-height: 28px;
+    padding: 0.14rem 0.18rem;
+  }
+  .tracker-chip {
+    font-size: 0.68rem;
+  }
+  .tracker-chip-label {
+    max-width: 10ch;
+  }
+  .tracker-chip-label-full {
+    display: none;
+  }
+  .tracker-chip-label-short {
+    display: inline;
+  }
+  .tracker-chip-action {
+    padding: 0.12rem 0.3rem;
+    font-size: 0.62rem;
   }
 }
