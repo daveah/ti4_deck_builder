@@ -28,6 +28,7 @@ site/
 
 # TypeScript / Node
 node_modules/
+.partykit/
 .npm/
 .pnpm-store/
 .yarn/

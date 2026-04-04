@@ -1,0 +1,42 @@
+[
+  {
+    "initiative": 1,
+    "name": "Leadership",
+    "source": "Twilight Imperium Fourth Edition product page"
+  },
+  {
+    "initiative": 2,
+    "name": "Diplomacy",
+    "source": "Twilight Imperium Fourth Edition product page"
+  },
+  {
+    "initiative": 3,
+    "name": "Politics",
+    "source": "Twilight Imperium Fourth Edition product page"
+  },
+  {
+    "initiative": 4,
+    "name": "Construction",
+    "source": "Twilight Imperium Fourth Edition product page"
+  },
+  {
+    "initiative": 5,
+    "name": "Trade",
+    "source": "Twilight Imperium Fourth Edition product page"
+  },
+  {
+    "initiative": 6,
+    "name": "Warfare",
+    "source": "Twilight Imperium Fourth Edition product page"
+  },
+  {
+    "initiative": 7,
+    "name": "Technology",
+    "source": "Twilight Imperium Fourth Edition product page"
+  },
+  {
+    "initiative": 8,
+    "name": "Imperial",
+    "source": "Twilight Imperium Fourth Edition product page"
+  }
+]

@@ -1,18 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  applyTrackerSharedState,
+  bindAppTabs,
   bindResultTabs,
+  bindTurnTracker,
+  buildTrackerExportPayload,
+  createPartySocketConnection,
+  generateTrackerRoomCode,
   describeSetupVariant,
   getLayoutDefinition,
+  getTrackerSharedState,
   initializeApp,
+  parseTrackerImportPayload,
   renderBoardPreview,
   renderHyperlaneGlyph,
   renderResult,
+  renderTurnTracker,
+  resolvePartyKitHost,
   rotationTransform,
+  type TrackerSocketLike,
   type AppDependencies,
   type BoardTile,
   type LayoutFile,
 } from "../src/app";
-import type { BuildGameResult } from "../src/deckBuilder";
+import type { BuildGameResult, Mode } from "../src/deckBuilder";
 
 function sampleResult(): BuildGameResult {
   return {
@@ -106,8 +117,58 @@ function sampleLayoutFile(): LayoutFile {
   };
 }
 
+function makeDataTransfer() {
+  const store = new Map<string, string>();
+  return {
+    effectAllowed: "move",
+    dropEffect: "move",
+    setData(type: string, value: string) {
+      store.set(type, value);
+    },
+    getData(type: string) {
+      return store.get(type) ?? "";
+    },
+  };
+}
+
+class FakeTrackerSocket implements TrackerSocketLike {
+  listeners = new Map<
+    string,
+    Array<(event: Event | MessageEvent<string>) => void>
+  >();
+
+  sent: string[] = [];
+
+  closed = false;
+
+  addEventListener(
+    type: string,
+    listener: (event: Event | MessageEvent<string>) => void,
+  ) {
+    const listeners = this.listeners.get(type) ?? [];
+    listeners.push(listener);
+    this.listeners.set(type, listeners);
+  }
+
+  close() {
+    this.closed = true;
+    this.emit("close", new Event("close"));
+  }
+
+  send(message: string) {
+    this.sent.push(message);
+  }
+
+  emit(type: string, event: Event | MessageEvent<string>) {
+    for (const listener of this.listeners.get(type) ?? []) {
+      listener(event);
+    }
+  }
+}
+
 beforeEach(() => {
   document.body.innerHTML = "";
+  window.history.replaceState({}, "", window.location.pathname);
 });
 
 describe("app helpers", () => {
@@ -274,6 +335,991 @@ describe("app helpers", () => {
     expect(html).toContain("None for this setup.");
     expect(html).toContain("None.");
   });
+
+  it("renders a turn tracker shell", () => {
+    const html = renderTurnTracker(4);
+    expect(html).toContain("Turn Order Tracker");
+    expect(html).toContain("Shared Room");
+    expect(html).toContain("Tracker Introduction");
+    expect(html).toContain('class="tracker-accordion" open');
+    expect(html).toContain('id="tracker-compact-layout"');
+    expect(html).toContain('id="tracker-room-code"');
+    expect(html).toContain('id="tracker-expansion"');
+    expect(html).toContain('id="tracker-player-count"');
+    expect(html).toContain("Faction Setup");
+    expect(html).toContain('id="tracker-speaker"');
+    expect(html).toContain("Import / Export");
+    expect(html).toContain('id="tracker-transfer-json"');
+    expect(html).toContain("Select race");
+    expect(html).toContain("Strategy Board");
+    expect(html).toContain("Naalu Token");
+    expect(html).toContain("Leadership");
+    expect(html).toContain("Imperial");
+    expect(html).toContain("Unassigned Factions");
+  });
+
+  it("serializes and reapplies shared tracker state", () => {
+    const state = {
+      expansion: "pok" as Mode,
+      playerCount: 3,
+      selectedFactions: [
+        "The Federation of Sol",
+        "",
+        "The Naalu Collective",
+      ] as string[],
+      assignments: {
+        "The Federation of Sol": { slot: 1, passed: false },
+      },
+      draggingFaction: null,
+      speakerSeat: 2,
+    };
+    const snapshot = getTrackerSharedState(state);
+    expect(snapshot.playerCount).toBe(3);
+
+    const target = {
+      expansion: "base" as Mode,
+      playerCount: 6,
+      selectedFactions: ["", "", "", "", "", ""],
+      assignments: {} as Record<string, { slot: number; passed: boolean }>,
+      draggingFaction: null,
+      speakerSeat: 0,
+    };
+    applyTrackerSharedState(target, snapshot);
+    expect(target.expansion).toBe("pok");
+    expect(target.speakerSeat).toBe(2);
+    expect(target.assignments["The Federation of Sol"]?.slot).toBe(1);
+
+    applyTrackerSharedState(target, {
+      expansion: "base",
+      playerCount: 3,
+      selectedFactions: ["The Federation of Sol"],
+      assignments: {},
+      speakerSeat: 0,
+    });
+    expect(target.selectedFactions).toEqual(["The Federation of Sol", "", ""]);
+  });
+
+  it("builds and parses export payloads", () => {
+    const payload = buildTrackerExportPayload({
+      expansion: "pok",
+      playerCount: 3,
+      selectedFactions: ["The Federation of Sol", "The Arborec", ""],
+      assignments: { "The Federation of Sol": { slot: 1, passed: true } },
+      draggingFaction: null,
+      speakerSeat: 1,
+    });
+    expect(payload.version).toBe(1);
+    expect(parseTrackerImportPayload(JSON.stringify(payload)).speakerSeat).toBe(
+      1,
+    );
+    expect(
+      parseTrackerImportPayload(
+        JSON.stringify({
+          expansion: "base",
+          playerCount: 3,
+          selectedFactions: ["The Federation of Sol", "", ""],
+          assignments: {},
+          speakerSeat: 0,
+        }),
+      ).expansion,
+    ).toBe("base");
+  });
+
+  it("exposes default room helpers", () => {
+    expect(generateTrackerRoomCode()).toHaveLength(8);
+    expect(resolvePartyKitHost()).toBe("localhost:1999");
+  });
+
+  it("falls back to Math.random when crypto.randomUUID is unavailable", () => {
+    const originalCrypto = globalThis.crypto;
+    const mathSpy = vi.spyOn(Math, "random").mockReturnValue(0.123456789);
+    Object.defineProperty(globalThis, "crypto", {
+      value: {},
+      configurable: true,
+    });
+
+    expect(generateTrackerRoomCode()).toHaveLength(8);
+
+    Object.defineProperty(globalThis, "crypto", {
+      value: originalCrypto,
+      configurable: true,
+    });
+    mathSpy.mockRestore();
+  });
+
+  it("creates a PartySocket connection using the configured host", async () => {
+    const PartySocketMock = vi.fn().mockImplementation((options) => options);
+    vi.doMock("partysocket", () => ({
+      default: PartySocketMock,
+    }));
+    vi.stubEnv("VITE_PARTYKIT_HOST", "example.partykit.dev");
+
+    const socket = await createPartySocketConnection("room42");
+
+    expect(PartySocketMock).toHaveBeenCalledWith({
+      host: "example.partykit.dev",
+      room: "room42",
+    });
+    expect(socket).toEqual({
+      host: "example.partykit.dev",
+      room: "room42",
+    });
+
+    vi.unstubAllEnvs();
+    vi.doUnmock("partysocket");
+  });
+
+  it("switches the top-level app tabs", () => {
+    const host = document.createElement("div");
+    host.innerHTML = `
+      <div>
+        <button type="button" class="app-tab is-active" data-app-tab-target="builder" aria-selected="true">Galaxy Builder</button>
+        <button type="button" class="app-tab" data-app-tab-target="tracker" aria-selected="false">Turn Tracker</button>
+        <section class="app-pane is-active" data-app-tab-panel="builder"></section>
+        <section class="app-pane" data-app-tab-panel="tracker" hidden></section>
+      </div>
+    `;
+    bindAppTabs(host);
+
+    const tabs = host.querySelectorAll<HTMLButtonElement>(".app-tab");
+    const panes = host.querySelectorAll<HTMLElement>(".app-pane");
+    tabs[1].click();
+
+    expect(tabs[1].classList.contains("is-active")).toBe(true);
+    expect(tabs[1].getAttribute("aria-selected")).toBe("true");
+    expect(panes[0].hidden).toBe(true);
+    expect(panes[1].hidden).toBe(false);
+  });
+
+  it("gracefully skips app tab binding when no tabs are present", () => {
+    expect(() => bindAppTabs(document.createElement("div"))).not.toThrow();
+  });
+
+  it("binds turn tracker controls", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(4);
+    bindTurnTracker(host);
+
+    const playerCount = host.querySelector<HTMLSelectElement>(
+      "#tracker-player-count",
+    );
+    const expansion =
+      host.querySelector<HTMLSelectElement>("#tracker-expansion");
+    const firstFaction = host.querySelector<HTMLSelectElement>(
+      '[data-faction-index="0"]',
+    );
+
+    expect(firstFaction?.textContent).toContain("The Arborec");
+    firstFaction!.value = "The Federation of Sol";
+    firstFaction!.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const secondFaction = host.querySelector<HTMLSelectElement>(
+      '[data-faction-index="1"]',
+    );
+    expect(secondFaction?.innerHTML).toContain("The Federation of Sol");
+    expect(secondFaction?.innerHTML).toContain("disabled");
+
+    expansion!.value = "pok";
+    expansion!.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(
+      host.querySelector<HTMLSelectElement>('[data-faction-index="0"]')
+        ?.textContent,
+    ).toContain("The Nomad");
+
+    playerCount!.value = "3";
+    playerCount!.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(host.querySelectorAll(".tracker-row")).toHaveLength(3);
+    expect(host.querySelectorAll(".strategy-slot")).toHaveLength(8);
+
+    const trackerTabs =
+      host.querySelectorAll<HTMLButtonElement>(".tracker-tab");
+    trackerTabs[1].click();
+    expect(trackerTabs[1].classList.contains("is-active")).toBe(true);
+    expect(
+      host.querySelector<HTMLElement>('[data-tracker-tab-panel="factions"]')
+        ?.hidden,
+    ).toBe(true);
+  });
+
+  it("auto-switches to the strategy tab on small screens once factions are fully selected", () => {
+    const originalInnerWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      value: 480,
+      configurable: true,
+    });
+
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+    expect(
+      host.querySelector<HTMLInputElement>("#tracker-compact-layout")?.checked,
+    ).toBe(true);
+    expect(
+      host
+        .querySelector<HTMLElement>(".tracker-shell")
+        ?.classList.contains("is-compact-layout"),
+    ).toBe(true);
+
+    const selections = [
+      "The Federation of Sol",
+      "The Arborec",
+      "The Naalu Collective",
+    ];
+    for (const [index, faction] of selections.entries()) {
+      const select = host.querySelector<HTMLSelectElement>(
+        `[data-faction-index="${index}"]`,
+      )!;
+      select.value = faction;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    const strategyTab = Array.from(
+      host.querySelectorAll<HTMLButtonElement>(".tracker-tab"),
+    ).find((button) => button.dataset.trackerTabTarget === "strategy");
+    expect(strategyTab?.classList.contains("is-active")).toBe(true);
+    expect(
+      host.querySelector<HTMLElement>('[data-tracker-tab-panel="strategy"]')
+        ?.hidden,
+    ).toBe(false);
+
+    Object.defineProperty(window, "innerWidth", {
+      value: originalInnerWidth,
+      configurable: true,
+    });
+  });
+
+  it("lets users manually toggle compact tracker layout", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const compactToggle = host.querySelector<HTMLInputElement>(
+      "#tracker-compact-layout",
+    )!;
+    const trackerShell = host.querySelector<HTMLElement>(".tracker-shell")!;
+    expect(compactToggle.checked).toBe(false);
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(false);
+
+    compactToggle.checked = true;
+    compactToggle.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(true);
+
+    compactToggle.checked = false;
+    compactToggle.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(false);
+  });
+
+  it("updates compact tracker layout on window resize until manually overridden", () => {
+    const originalInnerWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      value: 900,
+      configurable: true,
+    });
+
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const compactToggle = host.querySelector<HTMLInputElement>(
+      "#tracker-compact-layout",
+    )!;
+    const trackerShell = host.querySelector<HTMLElement>(".tracker-shell")!;
+    expect(compactToggle.checked).toBe(false);
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(false);
+
+    Object.defineProperty(window, "innerWidth", {
+      value: 480,
+      configurable: true,
+    });
+    window.dispatchEvent(new Event("resize"));
+    expect(compactToggle.checked).toBe(true);
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(true);
+
+    compactToggle.checked = false;
+    compactToggle.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(false);
+
+    Object.defineProperty(window, "innerWidth", {
+      value: 360,
+      configurable: true,
+    });
+    window.dispatchEvent(new Event("resize"));
+    expect(compactToggle.checked).toBe(false);
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(false);
+
+    Object.defineProperty(window, "innerWidth", {
+      value: originalInnerWidth,
+      configurable: true,
+    });
+  });
+
+  it("drags factions onto the strategy board, passes them, and resets the round", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const selections = [
+      "The Federation of Sol",
+      "The Arborec",
+      "The Naalu Collective",
+    ];
+    for (const [index, faction] of selections.entries()) {
+      const select = host.querySelector<HTMLSelectElement>(
+        `[data-faction-index="${index}"]`,
+      );
+      select!.value = faction;
+      select!.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    const speaker = host.querySelector<HTMLSelectElement>("#tracker-speaker");
+    speaker!.value = "1";
+    speaker!.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const poolChipsBefore = Array.from(
+      host.querySelectorAll<HTMLElement>("#tracker-pool .tracker-chip"),
+    );
+    expect(poolChipsBefore[0]?.dataset.factionName).toBe("The Arborec");
+    expect(poolChipsBefore[0]?.classList.contains("is-speaker")).toBe(true);
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Naalu Collective"]',
+      ),
+    ).not.toBeNull();
+
+    const dragToSlot = (faction: string, slot: number) => {
+      const chip = Array.from(
+        host.querySelectorAll<HTMLElement>(".tracker-chip"),
+      ).find((element) => element.dataset.factionName === faction);
+      const dragEvent = new Event("dragstart", { bubbles: true }) as Event & {
+        dataTransfer: ReturnType<typeof makeDataTransfer>;
+      };
+      dragEvent.dataTransfer = makeDataTransfer();
+      chip!.dispatchEvent(dragEvent);
+
+      const dropTarget = host.querySelector<HTMLElement>(
+        `.strategy-lane-active[data-drop-slot="${slot}"]`,
+      );
+      const dropEvent = new Event("drop", { bubbles: true }) as Event & {
+        dataTransfer: ReturnType<typeof makeDataTransfer>;
+      };
+      dropEvent.dataTransfer = dragEvent.dataTransfer;
+      dropTarget!.dispatchEvent(dropEvent);
+    };
+
+    dragToSlot("The Federation of Sol", 1);
+    dragToSlot("The Arborec", 2);
+    dragToSlot("The Naalu Collective", 3);
+    dragToSlot("The Arborec", 0);
+    dragToSlot("The Federation of Sol", 1);
+
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="1"] [data-faction-name="The Federation of Sol"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Arborec"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="3"] [data-faction-name="The Naalu Collective"]',
+      ),
+    ).not.toBeNull();
+
+    const invalidDropChip = host.querySelector(
+      '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Arborec"]',
+    ) as HTMLElement;
+    const invalidDrag = new Event("dragstart", { bubbles: true }) as Event & {
+      dataTransfer: ReturnType<typeof makeDataTransfer>;
+    };
+    invalidDrag.dataTransfer = makeDataTransfer();
+    invalidDropChip.dispatchEvent(invalidDrag);
+    const invalidDropTarget = host.querySelector<HTMLElement>(
+      '.strategy-lane-active[data-drop-slot="1"]',
+    );
+    const invalidDrop = new Event("drop", { bubbles: true }) as Event & {
+      dataTransfer: ReturnType<typeof makeDataTransfer>;
+    };
+    invalidDrop.dataTransfer = invalidDrag.dataTransfer;
+    invalidDropTarget!.dispatchEvent(invalidDrop);
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Arborec"]',
+      ),
+    ).not.toBeNull();
+
+    const occupiedValidDrop = new Event("drop", { bubbles: true }) as Event & {
+      dataTransfer: ReturnType<typeof makeDataTransfer>;
+    };
+    occupiedValidDrop.dataTransfer = invalidDrag.dataTransfer;
+    host
+      .querySelector<HTMLElement>('.strategy-lane-active[data-drop-slot="1"]')!
+      .dispatchEvent(occupiedValidDrop);
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="1"] [data-faction-name="The Federation of Sol"]',
+      ),
+    ).not.toBeNull();
+
+    for (const faction of selections) {
+      const button = Array.from(
+        host.querySelectorAll<HTMLButtonElement>(".tracker-chip-action"),
+      ).find((element) => element.dataset.passFaction === faction);
+      button!.click();
+    }
+
+    expect(
+      host.querySelector(
+        '.strategy-lane-passed [data-faction-name="The Federation of Sol"]',
+      ),
+    ).not.toBeNull();
+    expect(host.textContent).toContain("Reset for Next Round");
+
+    host
+      .querySelector<HTMLButtonElement>("#tracker-reset-round")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+
+    expect(host.querySelector("#tracker-reset-round")).toBeNull();
+    expect(host.querySelectorAll("#tracker-pool .tracker-chip")).toHaveLength(
+      2,
+    );
+    const poolChipsAfter = Array.from(
+      host.querySelectorAll<HTMLElement>("#tracker-pool .tracker-chip"),
+    );
+    expect(poolChipsAfter.map((chip) => chip.dataset.factionName)).toEqual([
+      "The Arborec",
+      "The Federation of Sol",
+    ]);
+    expect(poolChipsAfter[0]?.classList.contains("is-speaker")).toBe(true);
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Naalu Collective"]',
+      ),
+    ).not.toBeNull();
+  });
+
+  it("joins a shared room and applies remote snapshots", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    const socket = new FakeTrackerSocket();
+    const socketFactory = vi.fn(async () => socket);
+    bindTurnTracker(host, socketFactory);
+
+    const roomCode = host.querySelector<HTMLInputElement>("#tracker-room-code");
+    roomCode!.value = "table42";
+    host
+      .querySelector<HTMLButtonElement>("#tracker-join-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+
+    await Promise.resolve();
+    expect(socketFactory).toHaveBeenCalledWith("table42");
+
+    socket.emit("open", new Event("open"));
+    expect(socket.sent[0]).toContain('"type":"hello"');
+
+    socket.emit(
+      "message",
+      new MessageEvent("message", {
+        data: JSON.stringify({
+          type: "snapshot",
+          state: {
+            expansion: "pok",
+            playerCount: 3,
+            selectedFactions: [
+              "The Federation of Sol",
+              "The Arborec",
+              "The Naalu Collective",
+            ],
+            assignments: {
+              "The Federation of Sol": { slot: 1, passed: false },
+            },
+            speakerSeat: 1,
+          },
+        }),
+      }),
+    );
+    socket.emit(
+      "message",
+      new MessageEvent("message", {
+        data: JSON.stringify({ type: "presence", connections: 3 }),
+      }),
+    );
+
+    expect(host.textContent).toContain("Shared room TABLE42");
+    expect(host.textContent).toContain("3 connected");
+    expect(
+      host.querySelector<HTMLSelectElement>('[data-faction-index="0"]')?.value,
+    ).toBe("The Federation of Sol");
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="1"] [data-faction-name="The Federation of Sol"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      host.querySelector("#tracker-pool .tracker-chip.is-speaker"),
+    ).not.toBeNull();
+  });
+
+  it("handles shared room create, copy, leave, and local updates", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    const socket = new FakeTrackerSocket();
+    const socketFactory = vi.fn(async () => socket);
+    const clipboardWriteText = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: clipboardWriteText,
+      },
+      configurable: true,
+    });
+    const randomUuidSpy = vi
+      .spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValue("f00dbabe-0000-0000-0000-000000000000");
+
+    bindTurnTracker(host, socketFactory);
+
+    host
+      .querySelector<HTMLButtonElement>("#tracker-create-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    await Promise.resolve();
+
+    expect(socketFactory).toHaveBeenCalledWith("f00dbabe");
+    socket.emit("open", new Event("open"));
+    expect(host.textContent).toContain("Shared room F00DBABE");
+
+    const firstFaction = host.querySelector<HTMLSelectElement>(
+      '[data-faction-index="0"]',
+    )!;
+    firstFaction.value = "The Federation of Sol";
+    firstFaction.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(socket.sent.at(-1)).toContain('"type":"replace_state"');
+
+    const dragEvent = new Event("dragstart", { bubbles: true }) as Event & {
+      dataTransfer: ReturnType<typeof makeDataTransfer>;
+    };
+    dragEvent.dataTransfer = makeDataTransfer();
+    host
+      .querySelector<HTMLElement>(
+        '#tracker-pool .tracker-chip[data-faction-name="The Federation of Sol"]',
+      )!
+      .dispatchEvent(dragEvent);
+    host
+      .querySelector<HTMLElement>(
+        '#tracker-pool .tracker-chip[data-faction-name="The Federation of Sol"]',
+      )!
+      .dispatchEvent(new Event("dragend", { bubbles: true }));
+    const dropEvent = new Event("drop", { bubbles: true }) as Event & {
+      dataTransfer: ReturnType<typeof makeDataTransfer>;
+    };
+    dropEvent.dataTransfer = dragEvent.dataTransfer;
+    host
+      .querySelector<HTMLElement>('.strategy-lane-active[data-drop-slot="1"]')!
+      .dispatchEvent(dropEvent);
+
+    firstFaction.value = "The Arborec";
+    firstFaction.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="1"] [data-faction-name="The Federation of Sol"]',
+      ),
+    ).toBeNull();
+
+    host
+      .querySelector<HTMLButtonElement>("#tracker-copy-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    await Promise.resolve();
+    expect(clipboardWriteText).toHaveBeenCalledWith(
+      expect.stringContaining("trackerRoom=f00dbabe"),
+    );
+    expect(host.textContent).toContain("Invite link copied");
+
+    host
+      .querySelector<HTMLButtonElement>("#tracker-leave-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    expect(socket.closed).toBe(true);
+    expect(host.textContent).toContain("Local only");
+    expect(
+      host.querySelector<HTMLInputElement>("#tracker-room-code")?.value,
+    ).toBe("");
+
+    socket.emit("open", new Event("open"));
+    expect(host.textContent).toContain("Shared room");
+
+    randomUuidSpy.mockRestore();
+  });
+
+  it("reports join, socket, copy, and import errors", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    const socket = new FakeTrackerSocket();
+    const socketFactory = vi
+      .fn()
+      .mockResolvedValueOnce(socket)
+      .mockRejectedValueOnce(new Error("factory failed"));
+    bindTurnTracker(host, socketFactory);
+
+    host
+      .querySelector<HTMLButtonElement>("#tracker-join-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    expect(host.textContent).toContain("Enter a room code first");
+
+    const roomCode =
+      host.querySelector<HTMLInputElement>("#tracker-room-code")!;
+    roomCode.value = "err42";
+    host
+      .querySelector<HTMLButtonElement>("#tracker-join-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    await Promise.resolve();
+    socket.emit("error", new Event("error"));
+    expect(host.textContent).toContain("Unable to connect");
+    socket.emit("close", new Event("close"));
+    expect(host.textContent).toContain("Connection issue");
+
+    socket.emit(
+      "message",
+      new MessageEvent("message", {
+        data: JSON.stringify({ type: "error", message: "Server unhappy" }),
+      }),
+    );
+    expect(host.textContent).toContain("Server unhappy");
+
+    roomCode.value = "err43";
+    host
+      .querySelector<HTMLButtonElement>("#tracker-join-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    await Promise.resolve();
+    expect(host.textContent).toContain("factory failed");
+
+    roomCode.value = "err44";
+    socketFactory.mockRejectedValueOnce("plain factory failure");
+    host
+      .querySelector<HTMLButtonElement>("#tracker-join-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    await Promise.resolve();
+    expect(host.textContent).toContain("plain factory failure");
+
+    Object.defineProperty(navigator, "clipboard", {
+      value: undefined,
+      configurable: true,
+    });
+    host
+      .querySelector<HTMLButtonElement>("#tracker-copy-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    expect(host.textContent).toContain("Join a room before copying");
+
+    host
+      .querySelector<HTMLButtonElement>("#tracker-import-state")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    await Promise.resolve();
+    expect(host.textContent).toContain(
+      "Paste exported tracker JSON before importing.",
+    );
+
+    const transferField = host.querySelector<HTMLTextAreaElement>(
+      "#tracker-transfer-json",
+    )!;
+    transferField.value = "{ bad json";
+    host
+      .querySelector<HTMLButtonElement>("#tracker-import-state")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    await Promise.resolve();
+    expect(host.textContent).toContain("Import failed");
+
+    const parseSpy = vi.spyOn(JSON, "parse").mockImplementation(() => {
+      throw "plain failure";
+    });
+    transferField.value = '{"ignored":true}';
+    host
+      .querySelector<HTMLButtonElement>("#tracker-import-state")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    await Promise.resolve();
+    expect(host.textContent).toContain("Import failed: plain failure");
+    parseSpy.mockRestore();
+  });
+
+  it("auto-joins from the trackerRoom query param", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}?trackerRoom=autojoin`,
+    );
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    const socket = new FakeTrackerSocket();
+    const socketFactory = vi.fn(async () => socket);
+
+    bindTurnTracker(host, socketFactory);
+    await Promise.resolve();
+
+    expect(socketFactory).toHaveBeenCalledWith("autojoin");
+    socket.emit("open", new Event("open"));
+    expect(host.textContent).toContain("Shared room AUTOJOIN");
+  });
+
+  it("exports and reimports tracker state into a fresh shared room", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    const sockets: FakeTrackerSocket[] = [];
+    const socketFactory = vi.fn(async () => {
+      const socket = new FakeTrackerSocket();
+      sockets.push(socket);
+      return socket;
+    });
+    bindTurnTracker(host, socketFactory);
+
+    const selects = [
+      "The Federation of Sol",
+      "The Arborec",
+      "The Naalu Collective",
+    ];
+    for (const [index, faction] of selects.entries()) {
+      const select = host.querySelector<HTMLSelectElement>(
+        `[data-faction-index="${index}"]`,
+      );
+      select!.value = faction;
+      select!.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    host.querySelector<HTMLSelectElement>("#tracker-speaker")!.value = "2";
+    host
+      .querySelector<HTMLSelectElement>("#tracker-speaker")!
+      .dispatchEvent(new Event("change", { bubbles: true }));
+
+    host
+      .querySelector<HTMLButtonElement>("#tracker-export-state")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    const transferField = host.querySelector<HTMLTextAreaElement>(
+      "#tracker-transfer-json",
+    )!;
+    expect(transferField.value).toContain('"version": 1');
+    expect(transferField.value).toContain("The Naalu Collective");
+
+    const randomUuidSpy = vi
+      .spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValue("abcd1234-0000-0000-0000-000000000000");
+
+    host
+      .querySelector<HTMLButtonElement>("#tracker-import-state")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(socketFactory).toHaveBeenCalledWith("abcd1234");
+    sockets[0].emit("open", new Event("open"));
+    await Promise.resolve();
+    expect(host.textContent).toContain(
+      "Tracker state imported and shared as room ABCD1234.",
+    );
+    expect(
+      host.querySelector<HTMLSelectElement>('[data-faction-index="2"]')?.value,
+    ).toBe("The Naalu Collective");
+    expect(
+      host.querySelector<HTMLInputElement>("#tracker-room-code")?.value,
+    ).toBe("abcd1234");
+    randomUuidSpy.mockRestore();
+  });
+
+  it("imports locally when a fresh room code cannot be generated", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host, vi.fn());
+
+    const transferField = host.querySelector<HTMLTextAreaElement>(
+      "#tracker-transfer-json",
+    )!;
+    transferField.value = JSON.stringify({
+      version: 1,
+      tracker: {
+        expansion: "base",
+        playerCount: 3,
+        selectedFactions: ["The Federation of Sol", "", ""],
+        assignments: {},
+        speakerSeat: 0,
+      },
+    });
+
+    const randomUuidSpy = vi
+      .spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValue(
+        "        -0000-0000-0000-000000000000" as unknown as `${string}-${string}-${string}-${string}-${string}`,
+      );
+    host
+      .querySelector<HTMLButtonElement>("#tracker-import-state")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    await Promise.resolve();
+    expect(host.textContent).toContain("Tracker state imported locally.");
+    randomUuidSpy.mockRestore();
+  });
+
+  it("handles speaker fallback, drag hover states, and invalid drops", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const expansion =
+      host.querySelector<HTMLSelectElement>("#tracker-expansion")!;
+    expansion.value = "pok";
+    expansion.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const firstFaction = host.querySelector<HTMLSelectElement>(
+      '[data-faction-index="0"]',
+    )!;
+    firstFaction.value = "The Nomad";
+    firstFaction.dispatchEvent(new Event("change", { bubbles: true }));
+    expansion.value = "base";
+    expansion.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(
+      host.querySelector<HTMLSelectElement>('[data-faction-index="0"]')?.value,
+    ).toBe("");
+
+    const secondFaction = host.querySelector<HTMLSelectElement>(
+      '[data-faction-index="1"]',
+    )!;
+    secondFaction.value = "The Arborec";
+    secondFaction.dispatchEvent(new Event("change", { bubbles: true }));
+    const speaker = host.querySelector<HTMLSelectElement>("#tracker-speaker")!;
+    speaker.value = "2";
+    speaker.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(speaker.value).toBe("1");
+
+    const dropTarget = host.querySelector<HTMLElement>(
+      '.strategy-lane-active[data-drop-slot="1"]',
+    )!;
+    const dragOver = new Event("dragover", { bubbles: true }) as Event & {
+      dataTransfer: ReturnType<typeof makeDataTransfer>;
+    };
+    dragOver.dataTransfer = makeDataTransfer();
+    dropTarget.dispatchEvent(dragOver);
+    expect(dropTarget.classList.contains("is-over")).toBe(true);
+    dropTarget.dispatchEvent(new Event("dragleave", { bubbles: true }));
+    expect(dropTarget.classList.contains("is-over")).toBe(false);
+
+    const emptyDrop = new Event("drop", { bubbles: true }) as Event & {
+      dataTransfer: ReturnType<typeof makeDataTransfer>;
+    };
+    emptyDrop.dataTransfer = makeDataTransfer();
+    dropTarget.dispatchEvent(emptyDrop);
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="1"] .tracker-chip',
+      ),
+    ).toBeNull();
+  });
+
+  it("removes slot zero when Naalu is not in play", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const selections = [
+      "The Federation of Sol",
+      "The Arborec",
+      "The Barony of Letnev",
+    ];
+    for (const [index, faction] of selections.entries()) {
+      const select = host.querySelector<HTMLSelectElement>(
+        `[data-faction-index="${index}"]`,
+      )!;
+      select.value = faction;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    expect(
+      host.querySelector<HTMLElement>('[data-strategy-slot="0"]'),
+    ).toBeNull();
+    expect(
+      host.querySelector<HTMLElement>(
+        '.strategy-lane-active[data-drop-slot="0"]',
+      ),
+    ).toBeNull();
+  });
+
+  it("renders configured short faction names inside tracker chips", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const firstFaction = host.querySelector<HTMLSelectElement>(
+      '[data-faction-index="0"]',
+    )!;
+    firstFaction.value = "The Barony of Letnev";
+    firstFaction.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const compactToggle = host.querySelector<HTMLInputElement>(
+      "#tracker-compact-layout",
+    )!;
+    compactToggle.checked = true;
+    compactToggle.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(host.innerHTML).toContain("tracker-chip-label-full");
+    expect(host.innerHTML).toContain("The Barony of Letnev");
+    expect(host.innerHTML).toContain("tracker-chip-label-short");
+    expect(host.innerHTML).toContain(">Letnev<");
+  });
+
+  it("falls back to the full faction name when no short name is configured", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    const socket = new FakeTrackerSocket();
+    bindTurnTracker(
+      host,
+      vi.fn(async () => socket),
+    );
+
+    host.querySelector<HTMLInputElement>("#tracker-room-code")!.value =
+      "custom1";
+    host
+      .querySelector<HTMLButtonElement>("#tracker-join-room")!
+      .dispatchEvent(new Event("click", { bubbles: true }));
+    await Promise.resolve();
+    socket.emit("open", new Event("open"));
+    socket.emit(
+      "message",
+      new MessageEvent("message", {
+        data: JSON.stringify({
+          type: "snapshot",
+          state: {
+            expansion: "base",
+            playerCount: 3,
+            selectedFactions: ["Custom Faction", "", ""],
+            assignments: {},
+            speakerSeat: 0,
+          },
+        }),
+      }),
+    );
+
+    expect(host.innerHTML).toContain(">Custom Faction<");
+  });
+
+  it("falls back to the factions tab if a tracker tab button has no target", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const strategyTab = Array.from(
+      host.querySelectorAll<HTMLButtonElement>(".tracker-tab"),
+    ).find((button) => button.dataset.trackerTabTarget === "strategy")!;
+    strategyTab.click();
+    expect(
+      host.querySelector<HTMLElement>('[data-tracker-tab-panel="strategy"]')
+        ?.hidden,
+    ).toBe(false);
+
+    const malformedTab =
+      host.querySelectorAll<HTMLButtonElement>(".tracker-tab")[0]!;
+    delete malformedTab.dataset.trackerTabTarget;
+    malformedTab.click();
+
+    expect(
+      host.querySelector<HTMLElement>('[data-tracker-tab-panel="factions"]')
+        ?.hidden,
+    ).toBe(false);
+  });
+
+  it("gracefully skips turn tracker binding if controls are missing", () => {
+    expect(() => bindTurnTracker(document.createElement("div"))).not.toThrow();
+  });
 });
 
 describe("initializeApp", () => {
@@ -325,6 +1371,7 @@ describe("initializeApp", () => {
     const setup = root.querySelector<HTMLSelectElement>("#setup");
     expect(setup?.value).toBe("hyperlanes");
     expect(app.layoutPreviewView.innerHTML).toContain("Board Layout Preview");
+    expect(app.trackerView.innerHTML).toContain("Turn Order Tracker");
   });
 
   it("re-renders the board preview when rotation changes", () => {

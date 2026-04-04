@@ -7,13 +7,19 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
+    "dev:web": "vite",
+    "dev:party": "partykit dev party/tracker.ts",
     "build": "vite build",
+    "build:web": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "check:python": "node ./scripts/run-checks.mjs python",
     "check:ts": "node ./scripts/run-checks.mjs ts",
     "check:all": "node ./scripts/run-checks.mjs all",
-    "deploy:webdav": "node ./scripts/deploy-webdav.mjs"
+    "deploy:webdav": "node ./scripts/deploy-webdav.mjs",
+    "deploy:web": "node ./scripts/deploy-webdav.mjs",
+    "deploy:party": "partykit deploy party/tracker.ts",
+    "deploy:prod": "npm run deploy:web && npm run deploy:party"
   },
   "repository": {
     "type": "git",
@@ -23,11 +29,13 @@
     "@types/node": "^24.6.0",
     "@vitest/coverage-v8": "^3.2.4",
     "jsdom": "^29.0.1",
+    "partykit": "^0.0.115",
     "typescript": "^5.9.3",
     "vite": "^7.1.10",
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "partysocket": "^1.1.4",
     "webdav": "^5.9.0"
   }
 }
