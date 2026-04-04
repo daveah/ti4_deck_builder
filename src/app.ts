@@ -574,6 +574,12 @@ export function renderTurnTracker(playerCount = 6): string {
           </section>
         </div>
       </details>
+      <div class="tracker-layout-toggle">
+        <label class="tracker-layout-checkbox" for="tracker-compact-layout">
+          <input id="tracker-compact-layout" type="checkbox" />
+          <span>Use compact layout</span>
+        </label>
+      </div>
       <div class="tracker-tabs" role="tablist" aria-label="Tracker views">
         <button type="button" class="tracker-tab is-active" data-tracker-tab-target="factions" aria-selected="true">Faction Setup</button>
         <button type="button" class="tracker-tab" data-tracker-tab-target="strategy" aria-selected="false">Strategy Board</button>
@@ -758,6 +764,7 @@ export function bindTurnTracker(
   trackerRoot: HTMLElement,
   socketFactory: TrackerSocketFactory = createPartySocketConnection,
 ): void {
+  const trackerShell = trackerRoot.querySelector<HTMLElement>(".tracker-shell");
   const trackerTabs =
     trackerRoot.querySelectorAll<HTMLButtonElement>(".tracker-tab");
   const trackerPanes =
@@ -803,8 +810,12 @@ export function bindTurnTracker(
   const transferStatus = trackerRoot.querySelector<HTMLElement>(
     "#tracker-transfer-status",
   );
+  const compactLayoutField = trackerRoot.querySelector<HTMLInputElement>(
+    "#tracker-compact-layout",
+  );
 
   if (
+    !trackerShell ||
     !expansionField ||
     !playerCountField ||
     !speakerField ||
@@ -821,7 +832,8 @@ export function bindTurnTracker(
     !exportStateButton ||
     !importStateButton ||
     !transferJsonField ||
-    !transferStatus
+    !transferStatus ||
+    !compactLayoutField
   ) {
     return;
   }
@@ -843,6 +855,7 @@ export function bindTurnTracker(
   let socket: TrackerSocketLike | null = null;
   let applyingRemoteState = false;
   let activeTrackerTab = "factions";
+  let compactLayoutManuallySet = false;
   let transferMessage =
     "Export creates a portable snapshot. Import applies that snapshot locally and creates a fresh shared room.";
 
@@ -860,8 +873,9 @@ export function bindTurnTracker(
   const allSeatsAssigned = () =>
     state.selectedFactions.length > 0 &&
     state.selectedFactions.every((faction) => Boolean(faction));
-  const isCompactTrackerViewport = () =>
+  const shouldUseCompactTrackerByViewport = () =>
     typeof window !== "undefined" && window.innerWidth <= 720;
+  const isCompactTrackerLayout = () => compactLayoutField.checked;
   const getSpeakerFaction = () => state.selectedFactions[state.speakerSeat];
   const getFactionSeat = (faction: string) =>
     state.selectedFactions.indexOf(faction);
@@ -879,8 +893,10 @@ export function bindTurnTracker(
         return leftOffset - rightOffset;
       })
       .map((entry) => entry.faction);
-  const canAssignFactionToSlot = (faction: string, slot: number) =>
-    slot === 0 ? faction === "The Naalu Collective" : slot >= 1 && slot <= 8;
+  const isNaaluInPlay = () =>
+    state.selectedFactions.includes("The Naalu Collective");
+  const canAssignFactionToSlot = (_faction: string, slot: number) =>
+    slot >= 0 && slot <= 8;
   const clearFactionAssignment = (faction: string) => {
     delete state.assignments[faction];
   };
@@ -892,12 +908,32 @@ export function bindTurnTracker(
       ),
     );
   };
+  const normalizeStrategyAssignments = () => {
+    if (!isNaaluInPlay()) {
+      state.assignments = Object.fromEntries(
+        Object.entries(state.assignments).filter(
+          ([, assignment]) => assignment.slot !== 0,
+        ),
+      );
+      return;
+    }
+    if (!state.assignments["The Naalu Collective"]) {
+      const occupiedFaction = getFactionAtSlot(0);
+      if (!occupiedFaction) {
+        state.assignments["The Naalu Collective"] = {
+          slot: 0,
+          passed: false,
+        };
+      }
+    }
+  };
   const getFactionAtSlot = (slot: number) =>
     Object.entries(state.assignments).find(
       ([, assignment]) => assignment.slot === slot,
     )?.[0];
   const assignFactionToSlot = (faction: string, slot: number) => {
-    if (!faction || !canAssignFactionToSlot(faction, slot)) return;
+    /* v8 ignore next -- rendered drop targets only emit slots 0 through 8 */
+    if (!canAssignFactionToSlot(faction, slot)) return;
     const occupiedFaction = getFactionAtSlot(slot);
     if (occupiedFaction && occupiedFaction !== faction) return;
     clearFactionAssignment(faction);
@@ -912,6 +948,12 @@ export function bindTurnTracker(
       state: getTrackerSharedState(state),
     };
     socket.send(JSON.stringify(message));
+  };
+  const syncCompactLayout = () => {
+    trackerShell.classList.toggle(
+      "is-compact-layout",
+      compactLayoutField.checked,
+    );
   };
 
   const renderDraggableFaction = (
@@ -1078,6 +1120,7 @@ export function bindTurnTracker(
           clearFactionAssignment(previousFaction);
         }
         syncAssignmentsToSelections();
+        normalizeStrategyAssignments();
         renderAll();
         publishState();
       });
@@ -1088,6 +1131,9 @@ export function bindTurnTracker(
     roomCodeField.value = roomId;
     renderSpeakerOptions();
     const selectedFactions = getSelectedFactions();
+    const visibleSlots = isNaaluInPlay()
+      ? Array.from({ length: 9 }, (_, index) => index)
+      : Array.from({ length: 8 }, (_, index) => index + 1);
     const unassignedFactions = getSpeakerOrderedFactions().filter(
       (faction) => !state.assignments[faction],
     );
@@ -1102,19 +1148,19 @@ export function bindTurnTracker(
       bindDragSource(chip, chip.dataset.factionName!);
     }
 
-    strategyBoard.innerHTML = Array.from({ length: 9 }, (_, index) => {
-      const slot = index;
-      const card = strategyCards.find((entry) => entry.initiative === slot);
-      const title = slot === 0 ? "Naalu Token" : card!.name;
-      const activeFaction =
-        Object.entries(state.assignments).find(
-          ([, assignment]) => assignment.slot === slot && !assignment.passed,
-        )?.[0] ?? null;
-      const passedFaction =
-        Object.entries(state.assignments).find(
-          ([, assignment]) => assignment.slot === slot && assignment.passed,
-        )?.[0] ?? null;
-      return `
+    strategyBoard.innerHTML = visibleSlots
+      .map((slot) => {
+        const card = strategyCards.find((entry) => entry.initiative === slot);
+        const title = slot === 0 ? "Naalu Token" : card!.name;
+        const activeFaction =
+          Object.entries(state.assignments).find(
+            ([, assignment]) => assignment.slot === slot && !assignment.passed,
+          )?.[0] ?? null;
+        const passedFaction =
+          Object.entries(state.assignments).find(
+            ([, assignment]) => assignment.slot === slot && assignment.passed,
+          )?.[0] ?? null;
+        return `
         <article class="strategy-slot strategy-slot-row" data-strategy-slot="${slot}">
           <div class="strategy-number">${slot}</div>
           <div class="strategy-copy">
@@ -1128,7 +1174,7 @@ export function bindTurnTracker(
                       activeFaction,
                       state.assignments[activeFaction]!,
                     )
-                  : `<p class="strategy-placeholder">${slot === 0 ? "Drop Naalu here" : "Drop faction here"}</p>`
+                  : `<p class="strategy-placeholder">Drop faction here</p>`
               }
             </div>
           </section>
@@ -1146,7 +1192,8 @@ export function bindTurnTracker(
           </section>
         </article>
       `;
-    }).join("");
+      })
+      .join("");
     for (const dropTarget of strategyBoard.querySelectorAll<HTMLElement>(
       ".strategy-lane-active",
     )) {
@@ -1181,18 +1228,24 @@ export function bindTurnTracker(
       .querySelector<HTMLButtonElement>("#tracker-reset-round")
       ?.addEventListener("click", () => {
         state.assignments = {};
+        normalizeStrategyAssignments();
         renderBoard();
         publishState();
       });
   };
 
   const renderAll = () => {
+    if (!compactLayoutManuallySet) {
+      compactLayoutField.checked = shouldUseCompactTrackerByViewport();
+    }
+    normalizeStrategyAssignments();
+    syncCompactLayout();
     renderRows();
     renderBoard();
     updateCollaborationStatus();
     if (
       activeTrackerTab === "factions" &&
-      isCompactTrackerViewport() &&
+      isCompactTrackerLayout() &&
       allSeatsAssigned()
     ) {
       activateTrackerTab("strategy");
@@ -1341,6 +1394,10 @@ export function bindTurnTracker(
       activateTrackerTab(button.dataset.trackerTabTarget ?? "factions");
     });
   }
+  compactLayoutField.addEventListener("change", () => {
+    compactLayoutManuallySet = true;
+    syncCompactLayout();
+  });
 
   expansionField.addEventListener("change", () => {
     state.expansion = expansionField.value as Mode;
@@ -1398,6 +1455,12 @@ export function bindTurnTracker(
   renderAll();
   updateTransferStatus();
   if (typeof window !== "undefined") {
+    window.addEventListener("resize", () => {
+      if (!compactLayoutManuallySet) {
+        compactLayoutField.checked = shouldUseCompactTrackerByViewport();
+        syncCompactLayout();
+      }
+    });
     const requestedRoomId =
       new URL(window.location.href).searchParams.get("trackerRoom") ?? "";
     if (requestedRoomId) {

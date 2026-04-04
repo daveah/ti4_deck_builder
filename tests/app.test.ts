@@ -342,6 +342,7 @@ describe("app helpers", () => {
     expect(html).toContain("Shared Room");
     expect(html).toContain("Tracker Introduction");
     expect(html).toContain('class="tracker-accordion" open');
+    expect(html).toContain('id="tracker-compact-layout"');
     expect(html).toContain('id="tracker-room-code"');
     expect(html).toContain('id="tracker-expansion"');
     expect(html).toContain('id="tracker-player-count"');
@@ -528,7 +529,7 @@ describe("app helpers", () => {
     playerCount!.value = "3";
     playerCount!.dispatchEvent(new Event("change", { bubbles: true }));
     expect(host.querySelectorAll(".tracker-row")).toHaveLength(3);
-    expect(host.querySelectorAll(".strategy-slot")).toHaveLength(9);
+    expect(host.querySelectorAll(".strategy-slot")).toHaveLength(8);
 
     const trackerTabs =
       host.querySelectorAll<HTMLButtonElement>(".tracker-tab");
@@ -550,6 +551,14 @@ describe("app helpers", () => {
     const host = document.createElement("div");
     host.innerHTML = renderTurnTracker(3);
     bindTurnTracker(host);
+    expect(
+      host.querySelector<HTMLInputElement>("#tracker-compact-layout")?.checked,
+    ).toBe(true);
+    expect(
+      host
+        .querySelector<HTMLElement>(".tracker-shell")
+        ?.classList.contains("is-compact-layout"),
+    ).toBe(true);
 
     const selections = [
       "The Federation of Sol",
@@ -572,6 +581,71 @@ describe("app helpers", () => {
       host.querySelector<HTMLElement>('[data-tracker-tab-panel="strategy"]')
         ?.hidden,
     ).toBe(false);
+
+    Object.defineProperty(window, "innerWidth", {
+      value: originalInnerWidth,
+      configurable: true,
+    });
+  });
+
+  it("lets users manually toggle compact tracker layout", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const compactToggle = host.querySelector<HTMLInputElement>(
+      "#tracker-compact-layout",
+    )!;
+    const trackerShell = host.querySelector<HTMLElement>(".tracker-shell")!;
+    expect(compactToggle.checked).toBe(false);
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(false);
+
+    compactToggle.checked = true;
+    compactToggle.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(true);
+
+    compactToggle.checked = false;
+    compactToggle.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(false);
+  });
+
+  it("updates compact tracker layout on window resize until manually overridden", () => {
+    const originalInnerWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      value: 900,
+      configurable: true,
+    });
+
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const compactToggle = host.querySelector<HTMLInputElement>(
+      "#tracker-compact-layout",
+    )!;
+    const trackerShell = host.querySelector<HTMLElement>(".tracker-shell")!;
+    expect(compactToggle.checked).toBe(false);
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(false);
+
+    Object.defineProperty(window, "innerWidth", {
+      value: 480,
+      configurable: true,
+    });
+    window.dispatchEvent(new Event("resize"));
+    expect(compactToggle.checked).toBe(true);
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(true);
+
+    compactToggle.checked = false;
+    compactToggle.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(false);
+
+    Object.defineProperty(window, "innerWidth", {
+      value: 360,
+      configurable: true,
+    });
+    window.dispatchEvent(new Event("resize"));
+    expect(compactToggle.checked).toBe(false);
+    expect(trackerShell.classList.contains("is-compact-layout")).toBe(false);
 
     Object.defineProperty(window, "innerWidth", {
       value: originalInnerWidth,
@@ -606,6 +680,11 @@ describe("app helpers", () => {
     );
     expect(poolChipsBefore[0]?.dataset.factionName).toBe("The Arborec");
     expect(poolChipsBefore[0]?.classList.contains("is-speaker")).toBe(true);
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Naalu Collective"]',
+      ),
+    ).not.toBeNull();
 
     const dragToSlot = (faction: string, slot: number) => {
       const chip = Array.from(
@@ -629,7 +708,8 @@ describe("app helpers", () => {
 
     dragToSlot("The Federation of Sol", 1);
     dragToSlot("The Arborec", 2);
-    dragToSlot("The Naalu Collective", 0);
+    dragToSlot("The Naalu Collective", 3);
+    dragToSlot("The Arborec", 0);
     dragToSlot("The Federation of Sol", 1);
 
     expect(
@@ -639,12 +719,17 @@ describe("app helpers", () => {
     ).not.toBeNull();
     expect(
       host.querySelector(
-        '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Naalu Collective"]',
+        '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Arborec"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="3"] [data-faction-name="The Naalu Collective"]',
       ),
     ).not.toBeNull();
 
     const invalidDropChip = host.querySelector(
-      '.strategy-lane-active[data-drop-slot="2"] [data-faction-name="The Arborec"]',
+      '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Arborec"]',
     ) as HTMLElement;
     const invalidDrag = new Event("dragstart", { bubbles: true }) as Event & {
       dataTransfer: ReturnType<typeof makeDataTransfer>;
@@ -652,7 +737,7 @@ describe("app helpers", () => {
     invalidDrag.dataTransfer = makeDataTransfer();
     invalidDropChip.dispatchEvent(invalidDrag);
     const invalidDropTarget = host.querySelector<HTMLElement>(
-      '.strategy-lane-active[data-drop-slot="0"]',
+      '.strategy-lane-active[data-drop-slot="1"]',
     );
     const invalidDrop = new Event("drop", { bubbles: true }) as Event & {
       dataTransfer: ReturnType<typeof makeDataTransfer>;
@@ -661,7 +746,7 @@ describe("app helpers", () => {
     invalidDropTarget!.dispatchEvent(invalidDrop);
     expect(
       host.querySelector(
-        '.strategy-lane-active[data-drop-slot="2"] [data-faction-name="The Arborec"]',
+        '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Arborec"]',
       ),
     ).not.toBeNull();
 
@@ -698,18 +783,21 @@ describe("app helpers", () => {
 
     expect(host.querySelector("#tracker-reset-round")).toBeNull();
     expect(host.querySelectorAll("#tracker-pool .tracker-chip")).toHaveLength(
-      3,
+      2,
     );
     const poolChipsAfter = Array.from(
       host.querySelectorAll<HTMLElement>("#tracker-pool .tracker-chip"),
     );
     expect(poolChipsAfter.map((chip) => chip.dataset.factionName)).toEqual([
       "The Arborec",
-      "The Naalu Collective",
       "The Federation of Sol",
     ]);
     expect(poolChipsAfter[0]?.classList.contains("is-speaker")).toBe(true);
-    expect(host.textContent).toContain("Drop faction here");
+    expect(
+      host.querySelector(
+        '.strategy-lane-active[data-drop-slot="0"] [data-faction-name="The Naalu Collective"]',
+      ),
+    ).not.toBeNull();
   });
 
   it("joins a shared room and applies remote snapshots", async () => {
@@ -1119,6 +1207,34 @@ describe("app helpers", () => {
     ).toBeNull();
   });
 
+  it("removes slot zero when Naalu is not in play", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderTurnTracker(3);
+    bindTurnTracker(host);
+
+    const selections = [
+      "The Federation of Sol",
+      "The Arborec",
+      "The Barony of Letnev",
+    ];
+    for (const [index, faction] of selections.entries()) {
+      const select = host.querySelector<HTMLSelectElement>(
+        `[data-faction-index="${index}"]`,
+      )!;
+      select.value = faction;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    expect(
+      host.querySelector<HTMLElement>('[data-strategy-slot="0"]'),
+    ).toBeNull();
+    expect(
+      host.querySelector<HTMLElement>(
+        '.strategy-lane-active[data-drop-slot="0"]',
+      ),
+    ).toBeNull();
+  });
+
   it("renders configured short faction names inside tracker chips", () => {
     const host = document.createElement("div");
     host.innerHTML = renderTurnTracker(3);
@@ -1130,6 +1246,11 @@ describe("app helpers", () => {
     firstFaction.value = "The Barony of Letnev";
     firstFaction.dispatchEvent(new Event("change", { bubbles: true }));
 
+    const compactToggle = host.querySelector<HTMLInputElement>(
+      "#tracker-compact-layout",
+    )!;
+    compactToggle.checked = true;
+    compactToggle.dispatchEvent(new Event("change", { bubbles: true }));
     expect(host.innerHTML).toContain("tracker-chip-label-full");
     expect(host.innerHTML).toContain("The Barony of Letnev");
     expect(host.innerHTML).toContain("tracker-chip-label-short");

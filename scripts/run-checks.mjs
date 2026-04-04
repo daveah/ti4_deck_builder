@@ -128,9 +128,10 @@ function runPythonChecks() {
 }
 
 function runTypeScriptChecks() {
-  runCommand("TypeScript: prettier", "npx", [
-    "--yes",
-    "prettier@3",
+  runCommand("TypeScript: prettier", "npm", [
+    "exec",
+    "--",
+    "prettier",
     "--check",
     ".",
   ]);
