@@ -307,6 +307,22 @@ select {
   background: rgba(240, 103, 103, 0.16);
   border-color: rgba(240, 103, 103, 0.35);
 }
+.tracker-layout-toggle {
+  margin: 0 0 0.85rem;
+}
+.tracker-layout-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+.tracker-layout-checkbox input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--gold);
+}
 .tracker-tabs {
   display: flex;
   gap: 0.75rem;
@@ -657,6 +673,105 @@ select {
   background: linear-gradient(135deg, var(--gold), #ffdca0);
   cursor: pointer;
 }
+.tracker-shell.is-compact-layout {
+  padding: 0.9rem;
+}
+.tracker-shell.is-compact-layout .tracker-accordion-summary {
+  padding: 0.7rem 0.85rem;
+  font-size: 0.95rem;
+}
+.tracker-shell.is-compact-layout .tracker-accordion-content {
+  padding: 0 0.85rem 0.85rem;
+}
+.tracker-shell.is-compact-layout .tracker-topline h2 {
+  font-size: 1.2rem;
+}
+.tracker-shell.is-compact-layout .tracker-topline .lede,
+.tracker-shell.is-compact-layout .tracker-collab-copy p,
+.tracker-shell.is-compact-layout .strategy-board-intro,
+.tracker-shell.is-compact-layout .tracker-pool-head p,
+.tracker-shell.is-compact-layout .tracker-layout-checkbox {
+  font-size: 0.84rem;
+}
+.tracker-shell.is-compact-layout .tracker-tabs {
+  gap: 0.45rem;
+  margin-bottom: 0.8rem;
+}
+.tracker-shell.is-compact-layout .tracker-tab {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.88rem;
+}
+.tracker-shell.is-compact-layout .strategy-toolbar {
+  margin-top: 0.55rem;
+}
+.tracker-shell.is-compact-layout .tracker-pool-shell {
+  margin-top: 0.55rem;
+  padding: 0.65rem 0.75rem;
+}
+.tracker-shell.is-compact-layout .tracker-pool {
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+}
+.tracker-shell.is-compact-layout .strategy-board-columns,
+.tracker-shell.is-compact-layout .strategy-slot-row {
+  grid-template-columns: 1.9rem minmax(88px, 108px) minmax(0, 1fr) minmax(
+      0,
+      1fr
+    );
+  gap: 0.38rem;
+}
+.tracker-shell.is-compact-layout .strategy-board-columns {
+  margin: 0.55rem 0 0.25rem;
+  padding: 0 0.1rem;
+}
+.tracker-shell.is-compact-layout .strategy-board-column-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+}
+.tracker-shell.is-compact-layout .strategy-slot {
+  padding: 0.4rem 0.45rem;
+  border-radius: 14px;
+}
+.tracker-shell.is-compact-layout .strategy-number {
+  width: 1.65rem;
+  height: 1.65rem;
+  font-size: 0.78rem;
+}
+.tracker-shell.is-compact-layout .strategy-copy h3 {
+  font-size: 0.8rem;
+  line-height: 1.15;
+}
+.tracker-shell.is-compact-layout .strategy-lane {
+  min-height: 42px;
+  border-radius: 12px;
+}
+.tracker-shell.is-compact-layout .strategy-lane-body {
+  min-height: 31px;
+  padding: 0.2rem 0.25rem;
+}
+.tracker-shell.is-compact-layout .strategy-placeholder {
+  font-size: 0.72rem;
+}
+.tracker-shell.is-compact-layout .tracker-chip {
+  gap: 0.35rem;
+  padding: 0.28rem 0.42rem;
+  font-size: 0.73rem;
+}
+.tracker-shell.is-compact-layout .tracker-chip-seat {
+  min-width: 1.45rem;
+  padding: 0.03rem 0.26rem;
+  font-size: 0.64rem;
+}
+.tracker-shell.is-compact-layout .tracker-chip-action {
+  padding: 0.16rem 0.38rem;
+  font-size: 0.67rem;
+}
+.tracker-shell.is-compact-layout .tracker-chip-label-full {
+  display: none;
+}
+.tracker-shell.is-compact-layout .tracker-chip-label-short {
+  display: inline;
+}
 .preview-copy h3 {
   margin: 0;
   font-family: "Palatino Linotype", "Book Antiqua", serif;
@@ -905,97 +1020,8 @@ select {
 }
 
 @media (max-width: 720px) {
-  .tracker-shell {
-    padding: 0.9rem;
-  }
-  .tracker-accordion-summary {
-    padding: 0.7rem 0.85rem;
-    font-size: 0.95rem;
-  }
-  .tracker-accordion-content {
-    padding: 0 0.85rem 0.85rem;
-  }
   .tracker-topline h2 {
     font-size: 1.2rem;
-  }
-  .tracker-topline .lede,
-  .tracker-collab-copy p,
-  .strategy-board-intro,
-  .tracker-pool-head p {
-    font-size: 0.84rem;
-  }
-  .tracker-tabs {
-    gap: 0.45rem;
-    margin-bottom: 0.8rem;
-  }
-  .tracker-tab {
-    padding: 0.45rem 0.75rem;
-    font-size: 0.88rem;
-  }
-  .strategy-toolbar {
-    margin-top: 0.55rem;
-  }
-  .tracker-pool-shell {
-    margin-top: 0.55rem;
-    padding: 0.65rem 0.75rem;
-  }
-  .tracker-pool {
-    gap: 0.45rem;
-    margin-top: 0.5rem;
-  }
-  .strategy-board-columns,
-  .strategy-slot-row {
-    grid-template-columns: 1.9rem minmax(88px, 108px) minmax(0, 1fr) minmax(
-        0,
-        1fr
-      );
-    gap: 0.38rem;
-  }
-  .strategy-board-columns {
-    margin: 0.55rem 0 0.25rem;
-    padding: 0 0.1rem;
-  }
-  .strategy-board-column-label {
-    font-size: 0.66rem;
-    letter-spacing: 0.05em;
-  }
-  .strategy-slot {
-    padding: 0.4rem 0.45rem;
-    border-radius: 14px;
-  }
-  .strategy-number {
-    width: 1.65rem;
-    height: 1.65rem;
-    font-size: 0.78rem;
-  }
-  .strategy-copy h3 {
-    font-size: 0.8rem;
-    line-height: 1.15;
-  }
-  .strategy-lane {
-    min-height: 42px;
-    border-radius: 12px;
-  }
-  .strategy-lane-body {
-    min-height: 31px;
-    padding: 0.2rem 0.25rem;
-  }
-  .strategy-placeholder {
-    font-size: 0.72rem;
-  }
-  .tracker-chip {
-    gap: 0.35rem;
-    padding: 0.28rem 0.42rem;
-    font-size: 0.73rem;
-  }
-  .tracker-chip-seat {
-    min-width: 1.45rem;
-    padding: 0.03rem 0.26rem;
-    font-size: 0.64rem;
-  }
-  .tracker-chip-action {
-    padding: 0.16rem 0.38rem;
-    font-size: 0.67rem;
   }
 }
 
@@ -1004,41 +1030,35 @@ select {
     width: min(100%, calc(100% - 0.8rem));
     padding: 1rem 0 2rem;
   }
-  .tracker-shell {
+  .tracker-shell.is-compact-layout {
     padding: 0.7rem;
     border-radius: 22px;
   }
-  .strategy-board-columns,
-  .strategy-slot-row {
+  .tracker-shell.is-compact-layout .strategy-board-columns,
+  .tracker-shell.is-compact-layout .strategy-slot-row {
     grid-template-columns: 1.7rem minmax(74px, 94px) minmax(0, 1fr) minmax(
         0,
         1fr
       );
     gap: 0.26rem;
   }
-  .strategy-copy h3 {
+  .tracker-shell.is-compact-layout .strategy-copy h3 {
     font-size: 0.72rem;
   }
-  .strategy-lane {
+  .tracker-shell.is-compact-layout .strategy-lane {
     min-height: 38px;
   }
-  .strategy-lane-body {
+  .tracker-shell.is-compact-layout .strategy-lane-body {
     min-height: 28px;
     padding: 0.14rem 0.18rem;
   }
-  .tracker-chip {
+  .tracker-shell.is-compact-layout .tracker-chip {
     font-size: 0.68rem;
   }
-  .tracker-chip-label {
+  .tracker-shell.is-compact-layout .tracker-chip-label {
     max-width: 10ch;
   }
-  .tracker-chip-label-full {
-    display: none;
-  }
-  .tracker-chip-label-short {
-    display: inline;
-  }
-  .tracker-chip-action {
+  .tracker-shell.is-compact-layout .tracker-chip-action {
     padding: 0.12rem 0.3rem;
     font-size: 0.62rem;
   }
